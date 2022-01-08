@@ -1,0 +1,10 @@
+version: "2.2"
+services:
+  closedhab:
+    container_name: "closedhab"
+    image: "mircoheitmann/closedhab:latest"
+    restart: always
+    ports:
+      - "8087:8087"
+    volumes:
+      - "./:/usr/src/closedhab"
