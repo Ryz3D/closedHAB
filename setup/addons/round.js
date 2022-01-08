@@ -1,4 +1,4 @@
-const { log, warn, error } = require("../out");
+const { log, warn, error } = require("../../out");
 
 function convert(value, setup) {
     const roundFactor = 10 ** (setup.precision || 0);

@@ -64,7 +64,17 @@ class ClosedVar extends ClosedBase {
 
     read() {
         if (this.initialized) {
-            return this.value;
+            switch (typeof this.value) {
+                case "object":
+                    if ((this.value.constructor || {}).name === "array") {
+                        return [...this.value];
+                    }
+                    else {
+                        return JSON.parse(JSON.stringify(this.value));
+                    }
+                default:
+                    return this.value;
+            }
         }
         else {
             warn(`ClosedVar: Can't read "${this.id}", not initialized`);

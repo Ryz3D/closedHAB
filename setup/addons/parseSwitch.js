@@ -1,4 +1,4 @@
-const { log, warn, error } = require("../out");
+const { log, warn, error } = require("../../out");
 
 function convert(value, setup = {}) {
     if (value === null || value === undefined) {

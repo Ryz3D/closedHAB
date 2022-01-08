@@ -1,5 +1,5 @@
-const { ClosedVar, ClosedChannel, ClosedEvent } = require("../base");
-const { log, warn, error } = require("../out");
+const { ClosedVar, ClosedChannel, ClosedEvent } = require("../../base");
+const { log, warn, error } = require("../../out");
 const http = require("http");
 
 /*

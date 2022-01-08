@@ -17,13 +17,15 @@ ClosedVar 1.0       VARIABLE        CHANNEL             EVENT
 
 /*
 TODO:
-    - hidden vars (in frontend?)
     - reload converters properly
-    - deep copy data when returning read(), i.e. objects
 */
 
 const fs = require("fs");
 const { log, warn, error } = require("./out");
+
+const baseSetupPath = "./setup/";
+const setupFilePath = "setup.json";
+const addonsPath = "addons/";
 
 var setup = {};
 var loadedModules = [];
@@ -82,7 +84,7 @@ function unloadModule(id) {
 }
 
 function loadModule(id, reloadCb = _ => { }) {
-    const modPath = `./addons/${id}.js`;
+    const modPath = `${baseSetupPath}${addonsPath}${id}.js`;
     if (loadedModules.findIndex(m => m.id === id) === -1) {
         fs.watchFile(modPath, { persistent: false }, _ => {
             log(`Reloading addon "${id}"`);
@@ -102,8 +104,8 @@ function loadModule(id, reloadCb = _ => { }) {
         const mod = require(modPath);
         return loadedModules[loadedModules.push({ id, mod }) - 1].mod;
     }
-    catch {
-        error(`Can't load module "${id}"`);
+    catch (e) {
+        error(`Can't load module "${id}": ${e}`);
     }
 }
 
@@ -159,7 +161,7 @@ function loadAddon(id, addon_setup, addon_register, mod) {
 function loadSetupFile() {
     var previous = JSON.stringify(setup);
     try {
-        setup = JSON.parse(fs.readFileSync("setup.json"));
+        setup = JSON.parse(fs.readFileSync(`${baseSetupPath}${setupFilePath}`));
         if (JSON.stringify(setup) != previous) {
             log("Loading setup file");
             for (var entry of Object.entries(setup)) {
@@ -168,7 +170,7 @@ function loadSetupFile() {
                         const oldAddon = loadedModules[iAddon];
                         log(oldAddon)
                         if (entry[1].findIndex(a.id === oldAddon.id) === -1) {
-                            fs.unwatchFile(`./addons/${oldAddon.id}.js`);
+                            fs.unwatchFile(`${baseSetupPath}${addonsPath}${oldAddon.id}.js`);
                             unloadModule(oldAddon.id);
                             delete loadedModules[iAddon];
                         }
@@ -195,7 +197,7 @@ function loadSetupFile() {
 }
 
 function initSetup() {
-    fs.watchFile("setup.json", { persistent: false }, _ => loadSetupFile());
+    fs.watchFile(`${baseSetupPath}${setupFilePath}`, { persistent: false }, _ => loadSetupFile());
     loadSetupFile();
 }
 

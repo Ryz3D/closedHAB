@@ -1,7 +1,7 @@
 const http = require("http");
 const fs = require("fs");
 const express = require("express");
-const { log, warn, error } = require("../out");
+const { log, warn, error } = require("../../out");
 
 /*
 
