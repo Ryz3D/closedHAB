@@ -1,0 +1,121 @@
+{
+    "addons": [
+        {
+            "id": "rest",
+            "register": [
+                {
+                    "id": "klotz",
+                    "setup": {
+                        "get": "http://klotz:8005/color",
+                        "set": "http://klotz:8005/color",
+                        "setMethod": "PUT",
+                        "body": "0,100,{}"
+                    },
+                    "forwardConverters": [
+                        {
+                            "id": "split",
+                            "setup": {
+                                "index": 2
+                            }
+                        },
+                        {
+                            "id": "parseFloat"
+                        }
+                    ]
+                },
+                {
+                    "id": "balken_brightness",
+                    "setup": {
+                        "get": "http://esp32dev1/data",
+                        "set": "http://esp32dev1/brightness?value={}"
+                    },
+                    "forwardConverters": [
+                        {
+                            "id": "json",
+                            "setup": {
+                                "path": "brightness"
+                            }
+                        },
+                        {
+                            "id": "parseFloat"
+                        }
+                    ]
+                },
+                {
+                    "id": "balken_power",
+                    "setup": {
+                        "get": "http://esp32dev1/data",
+                        "set": "http://esp32dev1/power?value={}"
+                    },
+                    "forwardConverters": [
+                        {
+                            "id": "json",
+                            "setup": {
+                                "path": "power"
+                            }
+                        },
+                        {
+                            "id": "parseSwitch"
+                        }
+                    ],
+                    "backwardConverters": [
+                        {
+                            "id": "parseSwitch",
+                            "setup": {
+                                "back": true
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "homekit"
+        },
+        {
+            "id": "zway"
+        },
+        {
+            "id": "close",
+            "setup": {
+                "port": 8087,
+                "cors": "echo",
+                "frontend": {
+                    "name": "Mircos cooler Server"
+                },
+                "converters": [
+                    {
+                        "var": "balken_power",
+                        "forwardConverters": [
+                            {
+                                "id": "parseFloat"
+                            }
+                        ]
+                    },
+                    {
+                        "var": "balken_brightness",
+                        "forwardConverters": [
+                            {
+                                "id": "parseFloat"
+                            },
+                            {
+                                "id": "round"
+                            }
+                        ]
+                    },
+                    {
+                        "var": "klotz",
+                        "forwardConverters": [
+                            {
+                                "id": "parseFloat"
+                            },
+                            {
+                                "id": "round"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
