@@ -1,4 +1,4 @@
-# closedhab
+# closedHAB
 
 ### The official competitor for [openHAB](https://github.com/openhab/openhab-distro)
 
