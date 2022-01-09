@@ -1,15 +1,15 @@
 grid:
   - # rolli
     - type: button
-      text: fa-chevron-up
+      text: icon-chevron up-
       var: rolli
       value: UP
     - type: button
-      text: fa-stop-circle
+      text: icon-stop circle-
       var: rolli
       value: STOP
     - type: button
-      text: fa-chevron-down
+      text: icon-chevron down-
       var: rolli
       value: DOWN
   - # röhre, balken
