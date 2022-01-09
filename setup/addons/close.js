@@ -179,7 +179,7 @@ function run(c) {
                 for (var f of varForwConvs[vr.id] || []) {
                     val = f(val);
                 }
-                vr.send(val);
+                vr.send(val, req.query.f);
                 res.json({ error: 0 });
             }
             else {

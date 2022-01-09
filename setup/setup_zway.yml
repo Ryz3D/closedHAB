@@ -26,3 +26,25 @@ addons:
           class: Meter
           getFunc: data[2].val.value
           set: false
+      rolli2:
+        setup:
+          device: 11
+          class: SwitchMultilevel
+          get: false
+      steckiSwitch:
+        setup:
+          device: 38
+        forwardConverters:
+          - id: scale
+            setup:
+              quotient: 255
+        backwardConverters:
+          - id: scale
+            setup:
+              factor: 255
+      steckiSensor:
+        setup:
+          device: 38
+          class: Meter
+          getFunc: data[2].val.value
+          set: false

@@ -54,7 +54,7 @@ class ClosedVar extends ClosedBase {
         return 1;
     }
 
-    send(val) {
+    send(val, force = false) {
         if (this.initialized) {
             if (val !== null && val !== undefined) {
                 var changed = false;
@@ -70,7 +70,7 @@ class ClosedVar extends ClosedBase {
                     changed = val !== this.value;
                 }
 
-                if (changed) {
+                if (changed || force) {
                     log(`ClosedVar: "${this.id}" ${this.value} -> ${val}`);
                     this.value = val;
                     for (var s of this.subs) {
