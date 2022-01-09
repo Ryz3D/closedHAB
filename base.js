@@ -1,3 +1,13 @@
+/*
+
+ClosedVar 1.0       VARIABLE        CHANNEL             EVENT
+    - type()        1               2                   3
+    - send(val)     sets to value   writes to channel   fires event
+    - read()        returns value   -                   -
+    - sub(cb)       on change       on available        on fired
+
+*/
+
 const { Stream } = require("stream");
 const { log, warn, error } = require("./out");
 
@@ -27,6 +37,10 @@ class ClosedBase {
     sub(cb) {
         error("ClosedBase: no sub function defined");
     }
+
+    destroy() {
+        this.initialized = false;
+    }
 }
 
 class ClosedVar extends ClosedBase {
@@ -42,11 +56,26 @@ class ClosedVar extends ClosedBase {
 
     send(val) {
         if (this.initialized) {
-            if (this.value !== val && val !== null && val !== undefined && !isNaN(val)) {
-                log(`ClosedVar: "${this.id}" ${this.value} -> ${val}`);
-                this.value = val;
-                for (var s of this.subs) {
-                    s(this.value);
+            if (val !== null && val !== undefined) {
+                var changed = false;
+                if (typeof val === "object") {
+                    for (var k of [...Object.keys(val), ...Object.keys(this.value)]) {
+                        if (val[k] !== this.value[k]) {
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    changed = val !== this.value;
+                }
+
+                if (changed) {
+                    log(`ClosedVar: "${this.id}" ${this.value} -> ${val}`);
+                    this.value = val;
+                    for (var s of this.subs) {
+                        s(this.value);
+                    }
                 }
             }
         }

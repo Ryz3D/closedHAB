@@ -1,5 +1,13 @@
 const { log, warn, error } = require("../../out");
 
+function applyConverters(value, mappers) {
+    var val = value;
+    for (var m of mappers) {
+        val = require(`./${m.id}.js`).convert(val, m.setup || {});
+    }
+    return val;
+}
+
 function convert(value, setup) {
     try {
         const split = value.split(setup.sep || ",");
@@ -11,12 +19,15 @@ function convert(value, setup) {
                 error(`split: Index ${setup.index} out of range for "${value}"`);
             }
         }
+        else if (setup.mappers !== undefined) {
+            return split.map(v => applyConverters(v, setup.mappers));
+        }
         else {
             return split[0];
         }
     }
     catch (e) {
-        error(`split: Failed to split "${value}": ${e}`);
+        error(`split: Failed to process "${value}": ${e}`);
     }
 }
 

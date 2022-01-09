@@ -1,19 +1,14 @@
-const http = require("http");
 const fs = require("fs");
 const express = require("express");
+const yaml = require('js-yaml');
 const { log, warn, error } = require("../../out");
-
-/*
-
-TODO:
-    - sse auth
-    - websocket api
-
-*/
 
 var ctx;
 var app, listener;
-var startRetries;
+const publicDir = "./setup/addons/close/public/";
+const layoutDir = "./setup/addons/close/layouts/";
+const layoutExt = ".yml";
+const layoutParser = yaml.load;
 
 function checkAuth(req, res) {
     if (ctx.setup.auth) {
@@ -50,25 +45,20 @@ function run(c) {
     ctx = c;
     startRetries = 0;
 
-    var layoutDir = ctx.setup.layoutDir || "addons/close/layouts/";
-    if (!layoutDir.endsWith("/") && !layoutDir.endsWith("\\")) {
-        layoutDir += "/";
-    }
-
     const varForwConvs = {};
     const varBackConvs = {};
-    for (var r of ctx.setup.converters) {
-        varForwConvs[r.var] = [];
-        for (var c of r.forwardConverters || []) {
+    for (var e of Object.entries(ctx.setup.converters)) {
+        varForwConvs[e[0]] = [];
+        for (var c of e[1].forwardConverters || []) {
             const idBuf = c.id;
             const setupBuf = { ...(c.setup || {}) };
-            varForwConvs[r.var].push(v => require(`./${idBuf}.js`).convert(v, setupBuf));
+            varForwConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, setupBuf));
         }
-        varBackConvs[r.var] = [];
-        for (var c of r.backwardConverters || []) {
+        varBackConvs[e[0]] = [];
+        for (var c of e[1].backwardConverters || []) {
             const idBuf = c.id;
             const setupBuf = { ...(c.setup || {}) };
-            varBackConvs[r.var].push(v => require(`./${idBuf}.js`).convert(v, setupBuf));
+            varBackConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, setupBuf));
         }
     }
 
@@ -96,8 +86,8 @@ function run(c) {
                 var layouts = [];
                 try {
                     while (f = dir.readSync()) {
-                        if (f.isFile() && f.name.endsWith(".json")) {
-                            layouts.push(f.name.slice(0, -5));
+                        if (f.isFile() && f.name.endsWith(layoutExt)) {
+                            layouts.push(f.name.slice(0, -layoutExt.length));
                         }
                     }
                     dir.closeSync();
@@ -116,7 +106,7 @@ function run(c) {
             return;
         }
         if (req.query.q) {
-            const path = `${layoutDir}${decodeURIComponent(req.query.q).replace(/[^\w/_]/g, "")}.json`;
+            const path = `${layoutDir}${decodeURIComponent(req.query.q).replace(/[^\w/_]/g, "")}${layoutExt}`;
             try {
                 fs.readFile(path, (e, data) => {
                     if (e) {
@@ -124,7 +114,7 @@ function run(c) {
                         res.json({ error: 1, message: e.toString() });
                     }
                     else {
-                        res.json({ error: 0, data: JSON.parse(data.toString()) });
+                        res.json({ error: 0, data: layoutParser(data.toString("utf-8")) });
                     }
                 });
             }
@@ -241,7 +231,7 @@ function run(c) {
         res.json({ error: 0, data: ctx.setup.frontend || {} });
     });
 
-    app.use("/", express.static("addons/close/public"));
+    app.use("/", express.static(publicDir));
     app.use((req, res, next) => {
         res.statusCode = 404;
         if (req.path.startsWith("/api/")) {

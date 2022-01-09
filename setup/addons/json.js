@@ -6,16 +6,18 @@ function convert(value, setup) {
         if (!setup.path) {
             return element;
         }
-        for (var p of setup.path.split(".")) {
-            if (element[p]) {
-                element = element[p];
+        else {
+            for (var p of setup.path.split(".")) {
+                if (element[p] !== undefined) {
+                    element = element[p];
+                }
+                else {
+                    error(`JSON: Can't find "${p}" in "${element}"`);
+                    return;
+                }
             }
-            else {
-                error(`JSON: Can't find "${p}" in object "${element}"`);
-                return;
-            }
+            return element;
         }
-        return element;
     }
     catch (e) {
         error(`JSON: Can't parse: ${e} in "${value}"`);

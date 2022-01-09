@@ -1,12 +1,18 @@
 const { log, warn, error } = require("../../out");
 
 function convert(value, setup) {
-    try {
-        return parseFloat(value);
+    const parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+        if (setup.allowString && typeof value === "string") {
+            return value;
+        }
+        else {
+            error(`parseFloat: Can't parse "${value}"`);
+            return 0;
+        }
     }
-    catch (e) {
-        error(`parseFloat: Can't parse "${value}"`);
-        return 0;
+    else {
+        return parsed;
     }
 }
 

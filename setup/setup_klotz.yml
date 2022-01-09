@@ -1,0 +1,13 @@
+addons:
+  rest:
+    register:
+      klotzColor:
+        setup:
+          get: http://klotz:8005/color
+          set: http://klotz:8005/color
+          setMethod: PUT
+        forwardConverters:
+          - id: split
+            setup:
+              mappers:
+                - id: parseFloat

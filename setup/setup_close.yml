@@ -1,0 +1,32 @@
+addons:
+  close:
+    setup:
+      port: 8087
+      cors: echo
+      frontend:
+        name: Mircos cooler Server
+      converters:
+        balkenSwitch:
+          forwardConverters:
+            - id: parseFloat
+        balkenBrightness:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+        klotzColor:
+          forwardConverters:
+            - id: split
+              setup:
+                mappers:
+                  - id: parseFloat
+        rolli:
+          forwardConverters:
+            - id: parseFloat
+              setup:
+                allowString: true
+        roehreSwitch:
+          forwardConverters:
+            - id: parseFloat
+        roehreSensor:
+          forwardConverters:
+            - id: parseFloat

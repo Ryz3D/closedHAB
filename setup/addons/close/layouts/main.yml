@@ -1,0 +1,34 @@
+grid:
+  - # rolli
+    - type: button
+      text: fa-chevron-up
+      var: rolli
+      value: UP
+    - type: button
+      text: fa-stop-circle
+      var: rolli
+      value: STOP
+    - type: button
+      text: fa-chevron-down
+      var: rolli
+      value: DOWN
+  - # röhre, balken
+    -
+      - type: toggle
+        text: Röhre
+        var: roehreSwitch
+      - type: toggle
+        text: Balken
+        var: balkenSwitch
+    -
+      - type: slider
+        vertical: true
+        text: Balken
+        var: balkenBrightness
+  -
+    - type: color-sb
+      text: Klotz
+      varS: klotzS
+      varB: klotzB
+  -
+    -

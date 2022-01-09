@@ -1,4 +1,5 @@
 /*
+
 Addon Interface 1.0
     - setup {}
     - registerVar(var)
@@ -8,49 +9,58 @@ Addon Interface 1.0
     - back(id, data)
     - forw(id, data)
 
-ClosedVar 1.0       VARIABLE        CHANNEL             EVENT
-    - type()        1               2                   3
-    - send(val)     sets to value   writes to channel   fires event
-    - read()        returns value   -                   -
-    - sub(cb)       on change       on available        on fired
 */
 
 /*
+
 TODO:
     - reload converters properly
+    - websocket api
+    - close:
+        - sse auth
+    - rest:
+        - sse events
+        - sse channels
+
 */
 
 const fs = require("fs");
 const { log, warn, error } = require("./out");
+const yaml = require('js-yaml');
 
 const baseSetupPath = "./setup/";
-const setupFilePath = "setup.json";
+const setupFile = /^setup\w*.yml/; // string or regex
 const addonsPath = "addons/";
+const setupParser = yaml.load;
 
-var setup = {};
+var setup = { addons: {} };
 var loadedModules = [];
 const vars = [];
 const varForwConvs = {};
 const varBackConvs = {};
 
 function registerVar(vr) {
-    if (vars.findIndex(v => v.id === vr.id) === -1) {
-        log(`Registering var "${vr.id}"`);
+    log(`Registering var "${vr.id}"`);
+    const index = vars.findIndex(v => v.id === vr.id);
+    if (index === -1) {
         return vars[vars.push(vr) - 1];
     }
     else {
-        error(`Can't register var (ID in use): "${vr.id}"`);
+        vars[index].destroy();
+        vars[index] = vr;
+        return vars[index];
     }
 }
 
 function unregisterVar(id) {
     const index = vars.findIndex(v => v.id === id);
-    if (index !== -1) {
-        log(`Unregistering var "${id}"`);
-        vars.splice(index, 1);
+    if (index === -1) {
+        log(`Tried unregistering non-existent var "${id}"`);
     }
     else {
-        log(`Tried unregistering non-existent var "${id}"`)
+        log(`Unregistering var "${id}"`);
+        vars[index].destroy();
+        vars.splice(index, 1);
     }
 }
 
@@ -119,12 +129,12 @@ function getConv(id) {
     }
 }
 
-function loadAddon(id, addon_setup, addon_register, mod) {
+function loadAddon(id, addon_setup = {}, addon_register = [], mod) {
     if (!mod) {
         mod = loadModule(id, m => loadAddon(id, addon_setup, addon_register, m));
     }
     mod.run({
-        setup: addon_setup || {},
+        setup: addon_setup,
         registerVar,
         unregisterVar,
         findVar,
@@ -132,17 +142,17 @@ function loadAddon(id, addon_setup, addon_register, mod) {
         back: (id, v) => varBackConvs[id](v),
         forw: (id, v) => varForwConvs[id](v),
     });
-    for (var r of addon_register || []) {
-        const forwBuf = [...(r.forwardConverters || [])];
-        varForwConvs[r.id] = v => {
+    for (var r of Object.entries(addon_register)) {
+        const forwBuf = [...(r[1].forwardConverters || [])];
+        varForwConvs[r[0]] = v => {
             for (var c of forwBuf) {
                 const mod = getConv(c.id);
                 v = mod.convert(v, c.setup);
             }
             return v;
         };
-        const backBuf = [...(r.backwardConverters || [])];
-        varBackConvs[r.id] = v => {
+        const backBuf = [...(r[1].backwardConverters || [])];
+        varBackConvs[r[0]] = v => {
             for (var c of backBuf) {
                 const mod = getConv(c.id);
                 v = mod.convert(v, c.setup);
@@ -150,7 +160,7 @@ function loadAddon(id, addon_setup, addon_register, mod) {
             return v;
         };
         if (mod.register) {
-            mod.register(r.id, r.setup);
+            mod.register(r[0], r[1].setup || {});
         }
         else {
             error(`Addon "${id}" doesn't support register`);
@@ -158,51 +168,107 @@ function loadAddon(id, addon_setup, addon_register, mod) {
     }
 }
 
-function loadSetupFile() {
-    var previous = JSON.stringify(setup);
-    try {
-        setup = JSON.parse(fs.readFileSync(`${baseSetupPath}${setupFilePath}`));
-        if (JSON.stringify(setup) != previous) {
-            log("Loading setup file");
-            for (var entry of Object.entries(setup)) {
-                if (entry[0] === "addons") {
-                    for (var iAddon in loadedModules) {
-                        const oldAddon = loadedModules[iAddon];
-                        log(oldAddon)
-                        if (entry[1].findIndex(a.id === oldAddon.id) === -1) {
-                            fs.unwatchFile(`${baseSetupPath}${addonsPath}${oldAddon.id}.js`);
-                            unloadModule(oldAddon.id);
-                            delete loadedModules[iAddon];
-                        }
-                    }
-                    for (var a of entry[1]) {
-                        if (a.id) {
-                            loadAddon(a.id, a.setup, a.register);
-                        }
-                        else {
-                            error("Missing \"id\" tag in addon");
-                        }
-                    }
-                }
-                else {
-                    warn(`Unknown setup option "${entry[0]}"`);
+function extendRecursive(a, b) {
+    if (typeof a === "object") {
+        if (a === undefined) {
+            return b;
+        }
+        if (b === undefined) {
+            return a;
+        }
+        if ((a.constructor || {}).name === "array") {
+            return [
+                ...a,
+                ...b,
+            ];
+        }
+        else {
+            const newObj = {};
+            for (var k of [...Object.keys(a), ...Object.keys(b)]) {
+                newObj[k] = extendRecursive(a[k], b[k]);
+            }
+            return newObj;
+        }
+    }
+    else {
+        return b === undefined ? a : b;
+    }
+}
+
+function reloadSetup() {
+    for (var entry of Object.entries(setup)) {
+        if (entry[0] === "addons") {
+            for (var iAddon in loadedModules) {
+                const oldAddon = loadedModules[iAddon];
+                if (!entry[1][oldAddon.id]) {
+                    fs.unwatchFile(`${baseSetupPath}${addonsPath}${oldAddon.id}.js`);
+                    unloadModule(oldAddon.id);
+                    delete loadedModules[iAddon];
                 }
             }
-            // do more reloading here if neccessary
+            for (var a of Object.entries(entry[1])) {
+                loadAddon(a[0], a[1].setup, a[1].register);
+            }
         }
+        else {
+            warn(`Unknown setup option "${entry[0]}"`);
+        }
+    }
+}
+
+function loadSetupFile(path) {
+    try {
+        log(`Loading setup file "${path}"`);
+        const newData = setupParser(fs.readFileSync(path, { encoding: "utf-8" }));
+        setup = extendRecursive(setup, newData);
     }
     catch (e) {
         error(e);
     }
 }
 
-function initSetup() {
-    fs.watchFile(`${baseSetupPath}${setupFilePath}`, { persistent: false }, _ => loadSetupFile());
-    loadSetupFile();
-}
-
 function initialize() {
-    initSetup();
+    var setupFound = false;
+    for (var entry of fs.readdirSync(baseSetupPath, { withFileTypes: true })) {
+        var isSetup = false;
+        if (typeof setupFile === "string") {
+            isSetup = entry.name === setupFile;
+        }
+        else {
+            isSetup = entry.name.match(setupFile) ? true : false;
+        }
+
+        if (isSetup) {
+            setupFound = true;
+            if (entry.isFile()) {
+                const path = `${baseSetupPath}${entry.name}`;
+                fs.watchFile(path, { persistent: false }, _ => {
+                    loadSetupFile(path);
+                    reloadSetup();
+                });
+                loadSetupFile(path);
+            }
+            else if (entry.isDirectory()) {
+                for (var subf of fs.readdirSync(baseSetupPath + entry.name)) {
+                    const addChar = (entry.name.endsWith("/") || entry.name.endsWith("\\")) ? "" : "/";
+                    const path = `${baseSetupPath}${entry.name}${addChar}${subf}`;
+                    fs.watchFile(path, { persistent: false }, _ => {
+                        loadSetupFile(path);
+                        reloadSetup();
+                    });
+                    loadSetupFile(path);
+                }
+            }
+        }
+    }
+
+    if (setupFound) {
+        log("Setup loaded. Starting...");
+        reloadSetup();
+    }
+    else {
+        error("No setup file or directory found!");
+    }
 }
 
 initialize();

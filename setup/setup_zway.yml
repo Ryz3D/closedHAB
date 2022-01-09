@@ -1,0 +1,28 @@
+addons:
+  zway:
+    setup:
+      server: http://zway2:8083
+      auth: Basic YWRtaW46c21hcnRob21l
+    register:
+      rolli:
+        setup:
+          device: 2
+          class: SwitchMultilevel
+          get: false
+      roehreSwitch:
+        setup:
+          device: 44
+        forwardConverters:
+          - id: scale
+            setup:
+              quotient: 255
+        backwardConverters:
+          - id: scale
+            setup:
+              factor: 255
+      roehreSensor:
+        setup:
+          device: 44
+          class: Meter
+          getFunc: data[2].val.value
+          set: false
