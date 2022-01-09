@@ -3,7 +3,7 @@ const { log, warn, error } = require("../../out");
 function applyConverters(value, mappers) {
     var val = value;
     for (var m of mappers) {
-        val = require(`./${m.id}.js`).convert(val, m.setup || {});
+        val = parseFloat(val);//require(`./${m.id}.js`).convert(val, m.setup || {});
     }
     return val;
 }

@@ -30,3 +30,14 @@ addons:
         roehreSensor:
           forwardConverters:
             - id: parseFloat
+        rolli2:
+          forwardConverters:
+            - id: parseFloat
+              setup:
+                allowString: true
+        steckiSwitch:
+          forwardConverters:
+            - id: parseFloat
+        steckiSensor:
+          forwardConverters:
+            - id: parseFloat

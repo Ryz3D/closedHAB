@@ -16,7 +16,7 @@ const defaultSetup = {
     "placeholder": "{}",
     "headers": {},
     "interval": 10000,
-    "timeout": 5000,
+    "timeout": 1000,
 };
 
 var ctx;

@@ -199,29 +199,23 @@ function run(c) {
             return;
         }
         */
-        if (req.query.q) {
-            const id = decodeURIComponent(req.query.q).replace(/[^\w/_]/g, "");
-            const vr = ctx.findVar(id);
-            if (vr) {
-                res.contentType("text/event-stream");
-                res.flushHeaders();
-                const subClose = vr.sub(val => {
-                    for (var f of varBackConvs[vr.id] || []) {
-                        val = f(val);
-                    }
-                    res.write(`data: ${val}\n\n`);
-                });
-                req.on("close", subClose);
-            }
-            else {
-                warn(`close: /api/var/sub can't find var "${id}"`);
-                res.json({ error: 1, message: "not found" });
-            }
+        res.contentType("text/event-stream");
+        res.flushHeaders();
+        const subClosers = [];
+        for (var v of ctx.listVars()) {
+            const idBuf = v.id;
+            subClosers.push(v.sub(val => {
+                for (var f of varBackConvs[idBuf] || []) {
+                    val = f(val);
+                }
+                res.write(`event: ${idBuf}\ndata: ${val}\n\n`);
+            }));
         }
-        else {
-            warn("close: /api/var/sub needs ?q query for id");
-            res.json({ error: 1, message: "need ?q query for id" });
-        }
+        req.on("close", _ => {
+            for (var f of subClosers) {
+                f();
+            }
+        });
     });
     app.get("/api/setup", (req, res) => {
         cors(req, res);

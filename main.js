@@ -14,11 +14,14 @@ Addon Interface 1.0
 /*
 
 TODO:
+    - what if sub 1 closes and sub 2 moves into its place?
+        - random unique id
     - reload converters properly
     - websocket api
     - close:
         - sse auth
     - rest:
+        - retry on timeout (or reset item)
         - sse events
         - sse channels
 

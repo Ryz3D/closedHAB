@@ -9,7 +9,7 @@ const defaultSetup = {
     "set": "",
     "setMethod": "GET",
     "interval": 6000,
-    "timeout": 3000,
+    "timeout": 2000,
     "verbose": false,
     "body": "{}",
     "placeholder": "{}",
