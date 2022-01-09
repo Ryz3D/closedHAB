@@ -1,6 +1,6 @@
 # closedHAB
 
-[![Docker Image CI](https://github.com/Ryz3D/closedhab/actions/workflows/docker-image.yml/badge.svg)](https://github.com/Ryz3D/closedhab/actions/workflows/docker-image.yml)
+[![Docker Image CI](https://github.com/Ryz3D/closedhab/actions/workflows/docker-nightly.yml/badge.svg)](https://github.com/Ryz3D/closedhab/actions/workflows/docker-nightly.yml)
 
 ### The official competitor for [openHAB](https://github.com/openhab/openhab-distro)
 
