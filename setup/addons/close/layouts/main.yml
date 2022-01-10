@@ -2,33 +2,31 @@ grid:
   - # rolli
     - type: button
       text: icon-chevron up-
-      var: rolli
-      value: UP
+      var: m_rolli
+      value: 100
     - type: button
       text: icon-stop circle-
-      var: rolli
+      var: m_rolli
       value: STOP
     - type: button
       text: icon-chevron down-
-      var: rolli
-      value: DOWN
+      var: m_rolli
+      value: 0
   - # röhre, balken
     -
       - type: toggle
         text: Röhre
-        var: roehreSwitch
+        var: m_stecki_switch
       - type: toggle
         text: Balken
-        var: balkenSwitch
+        var: balken_switch
     -
       - type: slider
         vertical: true
         text: Balken
-        var: balkenBrightness
+        var: balken_brightness
   -
     - type: color-sb
       text: Klotz
-      varS: klotzS
-      varB: klotzB
-  -
-    -
+      varS: klotz_saturation
+      varB: klotz_brightness

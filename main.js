@@ -14,6 +14,7 @@ Addon Interface 1.0
 /*
 
 TODO:
+    - still sub accumulation :/
     - what if sub 1 closes and sub 2 moves into its place?
         - random unique id
     - reload converters properly
