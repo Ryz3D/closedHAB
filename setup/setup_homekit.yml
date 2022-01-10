@@ -1,2 +1,12 @@
 addons:
-  homekit: {}
+  homekit:
+    setup:
+      publish:
+        balken:
+          name: "Balken"
+          type: "Lightbulb"
+          vars:
+            On:
+              id: balkenSwitch
+            Brightness:
+              id: balkenBrightness

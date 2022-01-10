@@ -211,8 +211,12 @@ function reloadSetup() {
                     delete loadedModules[iAddon];
                 }
             }
-            for (var a of Object.entries(entry[1])) {
+            // load addons which can register vars first
+            for (var a of Object.entries(entry[1]).filter(a => a[1].register !== undefined)) {
                 loadAddon(a[0], a[1].setup, a[1].register);
+            }
+            for (var a of Object.entries(entry[1]).filter(a => a[1].register === undefined)) {
+                loadAddon(a[0], a[1].setup);
             }
         }
         else {

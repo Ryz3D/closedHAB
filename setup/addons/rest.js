@@ -26,7 +26,7 @@ function setupOption(id, varSetup) {
         return varSetup[id];
     }
     if (ctx.setup[id] !== undefined) {
-        return varSetup[id];
+        return ctx.setup[id];
     }
     return defaultSetup[id];
 }
