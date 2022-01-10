@@ -1,5 +1,5 @@
 addons:
-  homekit:
+  homekit: # make this homekit_m and overwrite_module: homekit
     setup:
       publish:
         balken:
@@ -17,18 +17,19 @@ addons:
           type: Lightbulb
           vars:
             On:
-              id: klotz_brightness
+              id: klotz_switch
               forwardConverters:
                 - id: parseBool
-                - id: scale
+              backwardConverters:
+                - id: parseBool
                   setup:
-                    factor: 100
+                    back: true
             Hue:
               id: klotz_hue
             Saturation:
               id: klotz_saturation
             Brightness:
-              id: balken_brightness
+              id: klotz_brightness
         m_rolli:
           name: M Rolli
           type: WindowCovering

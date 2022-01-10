@@ -6,7 +6,7 @@ function convert(value, ctx) {
         return ctx.setup.back ? "OFF" : 0;
     }
     if (ctx.setup.back) {
-        return value === 1 ? "ON" : "OFF";
+        return value >= 0.5 ? "ON" : "OFF";
     }
     else {
         return value.toString().toUpperCase() === "ON" ? 1 : 0;

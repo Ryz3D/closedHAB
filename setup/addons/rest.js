@@ -102,7 +102,9 @@ function register(id, setup = {}) {
     });
     intervalFuncs[id] = [_ => {
         const data = vr.initialized ? ctx.back(id, vr.read()) : "";
-        log(`REST: Getting "${id}" through ${setupOption("getMethod", setup)} "${setupOption("get", setup).replace(setupOption("placeholder", setup), data)}"`);
+        if (setupOption("verbose", setup)) {
+            log(`REST: Getting "${id}" through ${setupOption("getMethod", setup)} "${setupOption("get", setup).replace(setupOption("placeholder", setup), data)}"`);
+        }
         rest(id, setup, data, "get", "getMethod", d => {
             vr.send(ctx.forw(id, d));
         });

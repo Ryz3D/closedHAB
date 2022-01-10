@@ -2,6 +2,7 @@ addons:
   close:
     setup:
       port: 8087
+      auth: Basic YWRtaW46c21hcnRob21l
       cors: echo
       frontend:
         name: Mircos cooler Server
@@ -13,12 +14,23 @@ addons:
           forwardConverters:
             - id: parseFloat
             - id: round
-        klotz_color:
+
+        klotz_switch:
           forwardConverters:
-            - id: split
-              setup:
-                mappers:
-                  - id: parseFloat
+            - id: parseFloat
+        klotz_hue:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+        klotz_saturation:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+        klotz_brightness:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+
         m_rolli:
           forwardConverters:
             - id: parseFloat
@@ -30,6 +42,7 @@ addons:
         m_stecki_sensor:
           forwardConverters:
             - id: parseFloat
+
         l_rolli:
           forwardConverters:
             - id: parseFloat
@@ -41,6 +54,7 @@ addons:
         l_stecki_sensor:
           forwardConverters:
             - id: parseFloat
+
         e_rolli:
           forwardConverters:
             - id: parseFloat

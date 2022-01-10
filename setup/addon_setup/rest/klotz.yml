@@ -1,9 +1,15 @@
 addons:
   rest:
     register:
+      klotz_switch:
+        setup:
+          get: http://klotz:8005/power
+          set: http://klotz:8005/power
+          setMethod: PUT
+        forwardConverters:
+          - id: parseFloat
       klotz_hue:
         setup:
-          verbose: true
           get: http://klotz:8005/color
           set: http://klotz:8005/color
           setMethod: PUT

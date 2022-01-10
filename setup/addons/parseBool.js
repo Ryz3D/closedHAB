@@ -6,7 +6,7 @@ function convert(value, ctx) {
         return ctx.setup.back ? false : 0;
     }
     if (ctx.setup.back) {
-        return value === 1;
+        return value >= 0.5;
     }
     else {
         return value ? 1 : 0;
