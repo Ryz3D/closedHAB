@@ -18,7 +18,8 @@ const defaultSetup = {
 
 var ctx;
 const vars = [];
-var intervals = [];
+const intervalFuncs = {};
+const intervals = {};
 
 function setupOption(id, varSetup) {
     if (varSetup[id] !== undefined) {
@@ -71,8 +72,8 @@ function run(c) {
 
 function stop() {
     return new Promise(resolve => {
-        for (var i of intervals) {
-            clearInterval(i);
+        for (var e of Object.entries(intervals)) {
+            clearInterval(e[1]);
         }
         for (var v of vars) {
             ctx.unregisterVar(v.id);
@@ -94,12 +95,19 @@ function register(id, setup = {}) {
                 log(`REST: Got response for "${id}" set: "${res}"`);
             }
         });
+        if (intervals[id] !== undefined) {
+            clearInterval(intervals[id]);
+        }
+        intervals[id] = setInterval(...intervalFuncs[id]);
     });
-    intervals.push(setInterval(_ => {
+    intervalFuncs[id] = [_ => {
         rest(id, setup, vr.initialized ? ctx.back(id, vr.read()) : "", "get", "getMethod", d => {
             vr.send(ctx.forw(id, d));
         });
-    }, setupOption("interval", setup)));
+    },
+    setupOption("interval", setup),
+    ];
+    intervals[id] = setInterval(...intervalFuncs[id]);
 }
 
 module.exports = {

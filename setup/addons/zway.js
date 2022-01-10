@@ -21,7 +21,8 @@ const defaultSetup = {
 
 var ctx;
 const vars = [];
-var intervals = [];
+const intervalFuncs = {};
+const intervals = {};
 
 function setupOption(id, varSetup) {
     if (varSetup[id] !== undefined) {
@@ -116,8 +117,8 @@ function run(c) {
 
 function stop() {
     return new Promise(resolve => {
-        for (var i of intervals) {
-            clearInterval(i);
+        for (var e of Object.entries(intervals)) {
+            clearInterval(e[1]);
         }
         for (var v of vars) {
             ctx.unregisterVar(v.id);
@@ -133,17 +134,24 @@ function register(id, setup = {}) {
     if (setupOption("set", setup)) {
         vr.sub(data => {
             zwaySet(setup, ctx.back(id, data));
+            if (intervals[id] !== undefined) {
+                clearInterval(intervals[id]);
+            }
+            intervals[id] = setInterval(...intervalFuncs[id]);
         });
     }
     if (setupOption("get", setup)) {
-        intervals.push(setInterval(_ => {
+        intervalFuncs[id] = [_ => {
             zwayGet(setup)
                 .then(d => {
                     if (d !== undefined && (!isNaN(d) || !setupOption("floatCheck", setup))) {
                         vr.send(ctx.forw(id, d));
                     }
                 });
-        }, setupOption("interval", setup)));
+        },
+        setupOption("interval", setup),
+        ];
+        intervals[id] = setInterval(...intervalFuncs[id]);
     }
 }
 

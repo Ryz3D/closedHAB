@@ -22,6 +22,8 @@ TODO:
         - sse auth
     - rest:
         - retry on timeout (or reset item)
+        - why do i have so many timeouts?
+            - delay some requests, especially to same server (zway too!)
         - sse events
         - sse channels
 
