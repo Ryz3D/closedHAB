@@ -7,14 +7,39 @@ addons:
           type: Lightbulb
           vars:
             On:
-              id: balkenSwitch
+              id: balken_switch
               forwardConverters:
                 - id: parseBool
             Brightness:
-              id: balkenBrightness
-        rolli:
-          name: Rolli
+              id: balken_brightness
+        klotz:
+          name: Klotz
+          type: Lightbulb
+          vars:
+            On:
+              id: klotz_brightness
+              forwardConverters:
+                - id: parseBool
+                - id: scale
+                  setup:
+                    factor: 100
+            Hue:
+              id: klotz_hue
+            Saturation:
+              id: klotz_saturation
+            Brightness:
+              id: balken_brightness
+        m_rolli:
+          name: M Rolli
           type: WindowCovering
           vars:
             TargetPosition:
-              id: rolli
+              id: m_rolli
+        m_stecki:
+          name: Röhre
+          type: Lightbulb
+          vars:
+            On:
+              id: m_stecki_switch
+              forwardConverters:
+                - id: parseBool

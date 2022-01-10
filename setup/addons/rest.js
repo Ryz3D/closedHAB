@@ -88,7 +88,7 @@ function register(id, setup = {}) {
     vars.push(vr);
     vr.sub(data => {
         if (setupOption("verbose", setup)) {
-            log(`REST: Setting "${id}" to "${data}"`);
+            log(`REST: Sending "${ctx.back(id, data)}" to ${setupOption("setMethod", setup)} "${setupOption("set", setup).replace(setupOption("placeholder", setup), ctx.back(id, data))}" for "${id}"`);
         }
         rest(id, setup, ctx.back(id, data), "set", "setMethod", res => {
             if (setupOption("verbose", setup)) {
@@ -101,7 +101,9 @@ function register(id, setup = {}) {
         intervals[id] = setInterval(...intervalFuncs[id]);
     });
     intervalFuncs[id] = [_ => {
-        rest(id, setup, vr.initialized ? ctx.back(id, vr.read()) : "", "get", "getMethod", d => {
+        const data = vr.initialized ? ctx.back(id, vr.read()) : "";
+        log(`REST: Getting "${id}" through ${setupOption("getMethod", setup)} "${setupOption("get", setup).replace(setupOption("placeholder", setup), data)}"`);
+        rest(id, setup, data, "get", "getMethod", d => {
             vr.send(ctx.forw(id, d));
         });
     },

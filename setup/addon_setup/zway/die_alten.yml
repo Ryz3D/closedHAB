@@ -1,14 +1,14 @@
 addons:
   zway:
     register:
-      l_rolli:
+      e_rolli:
         setup:
-          device: 11
+          device: 41
           class: SwitchMultilevel
           get: false
-      l_stecki_switch:
+      e_stecki_switch:
         setup:
-          device: 38
+          device: 26
         forwardConverters:
           - id: scale
             setup:
@@ -17,9 +17,9 @@ addons:
           - id: scale
             setup:
               factor: 255
-      l_stecki_sensor:
+      e_stecki_sensor:
         setup:
-          device: 38
+          device: 26
           class: Meter
           getFunc: data[2].val.value
           set: false

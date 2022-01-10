@@ -1,9 +1,9 @@
 const { log, warn, error } = require("../../out");
 
-function convert(value, setup) {
+function convert(value, ctx) {
     const parsed = parseFloat(value);
     if (isNaN(parsed)) {
-        if (setup.allowString && typeof value === "string") {
+        if (ctx.setup.allowString && typeof value === "string") {
             return value;
         }
         else {

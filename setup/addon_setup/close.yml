@@ -6,38 +6,49 @@ addons:
       frontend:
         name: Mircos cooler Server
       converters:
-        balkenSwitch:
+        balken_switch:
           forwardConverters:
             - id: parseFloat
-        balkenBrightness:
+        balken_brightness:
           forwardConverters:
             - id: parseFloat
             - id: round
-        klotzColor:
+        klotz_color:
           forwardConverters:
             - id: split
               setup:
                 mappers:
                   - id: parseFloat
-        rolli:
+        m_rolli:
           forwardConverters:
             - id: parseFloat
               setup:
                 allowString: true
-        roehreSwitch:
+        m_stecki_switch:
           forwardConverters:
             - id: parseFloat
-        roehreSensor:
+        m_stecki_sensor:
           forwardConverters:
             - id: parseFloat
-        rolli2:
+        l_rolli:
           forwardConverters:
             - id: parseFloat
               setup:
                 allowString: true
-        steckiSwitch:
+        l_stecki_switch:
           forwardConverters:
             - id: parseFloat
-        steckiSensor:
+        l_stecki_sensor:
+          forwardConverters:
+            - id: parseFloat
+        e_rolli:
+          forwardConverters:
+            - id: parseFloat
+              setup:
+                allowString: true
+        e_stecki_switch:
+          forwardConverters:
+            - id: parseFloat
+        e_stecki_sensor:
           forwardConverters:
             - id: parseFloat

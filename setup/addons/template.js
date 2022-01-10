@@ -23,9 +23,10 @@ function register(id, setup = {}) {
     vars.push(vr);
     vr.sub(d => {
         // new data from server
+        ctx.back(id, d);
     });
     // add listener, send new data from addon
-    vr.send("0");
+    vr.send(ctx.forw(id, 0));
 }
 
 module.exports = {

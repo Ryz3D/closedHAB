@@ -2,17 +2,17 @@ addons:
   homekit:
     setup:
       publish:
-        l_rolli:
-          name: L Rolli
+        e_rolli:
+          name: Rollladen Schlafzimmer
           type: WindowCovering
           vars:
             TargetPosition:
-              id: l_rolli
-        l_stecki:
-          name: L Stecki
+              id: e_rolli
+        e_stecki:
+          name: Schrankbeleuchtung
           type: Lightbulb
           vars:
             On:
-              id: l_stecki_switch
+              id: e_stecki_switch
               forwardConverters:
                 - id: parseBool

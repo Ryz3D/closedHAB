@@ -1,13 +1,13 @@
 const { log, warn, error } = require("../../out");
 
-function convert(value, setup) {
+function convert(value, ctx) {
     try {
         var element = typeof value === "string" ? JSON.parse(value) : value;
-        if (!setup.path) {
+        if (!ctx.setup.path) {
             return element;
         }
         else {
-            for (var p of setup.path.split(".")) {
+            for (var p of ctx.setup.path.split(".")) {
                 if (element[p] !== undefined) {
                     element = element[p];
                 }

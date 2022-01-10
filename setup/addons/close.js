@@ -51,14 +51,14 @@ function run(c) {
         varForwConvs[e[0]] = [];
         for (var c of e[1].forwardConverters || []) {
             const idBuf = c.id;
-            const setupBuf = { ...(c.setup || {}) };
-            varForwConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, setupBuf));
+            const ctxBuf = { ...ctx, setup: c.setup || {} };
+            varForwConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, ctxBuf));
         }
         varBackConvs[e[0]] = [];
         for (var c of e[1].backwardConverters || []) {
             const idBuf = c.id;
-            const setupBuf = { ...(c.setup || {}) };
-            varBackConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, setupBuf));
+            const ctxBuf = { ...ctx, setup: c.setup || {} };
+            varBackConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, ctxBuf));
         }
     }
 

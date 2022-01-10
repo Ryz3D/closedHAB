@@ -1,26 +1,30 @@
 const { log, warn, error } = require("../../out");
 
+var ctx;
+
 function applyConverters(value, mappers) {
     var val = value;
     for (var m of mappers) {
-        val = parseFloat(val);//require(`./${m.id}.js`).convert(val, m.setup || {});
+        val = require(`./${m.id}.js`).convert(val, { ...ctx, setup: m.setup || {} });
     }
     return val;
 }
 
-function convert(value, setup) {
+function convert(value, c) {
+    ctx = c;
+
     try {
-        const split = value.split(setup.sep || ",");
-        if (typeof setup.index === "number") {
-            if (setup.index >= 0 && setup.index < split.length) {
-                return split[setup.index];
+        const split = value.split(ctx.setup.sep || ",");
+        if (typeof ctx.setup.index === "number") {
+            if (ctx.setup.index >= 0 && ctx.setup.index < split.length) {
+                return split[ctx.setup.index];
             }
             else {
-                error(`split: Index ${setup.index} out of range for "${value}"`);
+                error(`split: Index ${ctx.setup.index} out of range for "${value}"`);
             }
         }
-        else if (setup.mappers !== undefined) {
-            return split.map(v => applyConverters(v, setup.mappers));
+        else if (ctx.setup.mappers !== undefined) {
+            return split.map(v => applyConverters(v, ctx.setup.mappers));
         }
         else {
             return split[0];

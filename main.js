@@ -152,7 +152,15 @@ function loadAddon(id, addon_setup = {}, addon_register = [], mod) {
         varForwConvs[r[0]] = v => {
             for (var c of forwBuf) {
                 const mod = getConv(c.id);
-                v = mod.convert(v, c.setup);
+                v = mod.convert(v, {
+                    setup: c.setup || {},
+                    registerVar,
+                    unregisterVar,
+                    findVar,
+                    listVars: _ => vars,
+                    back: (id, v) => varBackConvs[id](v),
+                    forw: (id, v) => varForwConvs[id](v),
+                });
             }
             return v;
         };
@@ -160,7 +168,15 @@ function loadAddon(id, addon_setup = {}, addon_register = [], mod) {
         varBackConvs[r[0]] = v => {
             for (var c of backBuf) {
                 const mod = getConv(c.id);
-                v = mod.convert(v, c.setup);
+                v = mod.convert(v, {
+                    setup: c.setup || {},
+                    registerVar,
+                    unregisterVar,
+                    findVar,
+                    listVars: _ => vars,
+                    back: (id, v) => varBackConvs[id](v),
+                    forw: (id, v) => varForwConvs[id](v),
+                });
             }
             return v;
         };

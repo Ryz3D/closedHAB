@@ -1,12 +1,12 @@
 addons:
   zway:
     register:
-      rolli:
+      m_rolli:
         setup:
           device: 2
           class: SwitchMultilevel
           get: false
-      roehreSwitch:
+      m_stecki_switch:
         setup:
           device: 44
         forwardConverters:
@@ -17,7 +17,7 @@ addons:
           - id: scale
             setup:
               factor: 255
-      roehreSensor:
+      m_stecki_sensor:
         setup:
           device: 44
           class: Meter

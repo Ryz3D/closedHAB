@@ -1,11 +1,11 @@
 const { log, warn, error } = require("../../out");
 
-function convert(value, setup = {}) {
+function convert(value, ctx) {
     if (value === null || value === undefined) {
         error("parseSwitch: Received null or undefined value");
-        return setup.back ? "OFF" : 0;
+        return ctx.setup.back ? "OFF" : 0;
     }
-    if (setup.back) {
+    if (ctx.setup.back) {
         return value === 1 ? "ON" : "OFF";
     }
     else {

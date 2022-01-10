@@ -61,7 +61,8 @@ function run(c) {
                         const backConvs = v[1].backwardConverters || [];
                         vr.sub(val => {
                             for (var c of backConvs) {
-                                val = require(`./${c.id}.js`).convert(val, c.setup || {});
+                                const convCtx = { ...ctx, setup: c.setup || {} };
+                                val = require(`./${c.id}.js`).convert(val, convCtx);
                             }
                             chr.setValue(val);
                         });
@@ -69,7 +70,8 @@ function run(c) {
                             if (vr.initialized) {
                                 var val = vr.read();
                                 for (var c of backConvs) {
-                                    val = require(`./${c.id}.js`).convert(val, c.setup || {});
+                                    const convCtx = { ...ctx, setup: c.setup || {} };
+                                    val = require(`./${c.id}.js`).convert(val, convCtx);
                                 }
                                 callback(undefined, val);
                             }
@@ -80,7 +82,8 @@ function run(c) {
                         chr.on(hap.CharacteristicEventTypes.SET, (value, callback) => {
                             var val = value;
                             for (var c of forwConvs) {
-                                val = require(`./${c.id}.js`).convert(val, c.setup || {});
+                                const convCtx = { ...ctx, setup: c.setup || {} };
+                                val = require(`./${c.id}.js`).convert(val, convCtx);
                             }
                             vr.send(val);
                             callback(undefined);

@@ -1,7 +1,7 @@
 addons:
   rest:
     register:
-      balkenBrightness:
+      balken_brightness:
         setup:
           get: http://esp32dev1/data
           set: http://esp32dev1/brightness?value={}
@@ -10,7 +10,7 @@ addons:
             setup:
               path: brightness
           - id: parseFloat
-      balkenSwitch:
+      balken_switch:
         setup:
           get: http://esp32dev1/data
           set: http://esp32dev1/power?value={}
