@@ -1,0 +1,5 @@
+addons:
+  zway:
+    setup:
+      server: http://zway2:8083
+      auth: Basic YWRtaW46c21hcnRob21l

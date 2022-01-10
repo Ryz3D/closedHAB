@@ -71,7 +71,7 @@ class ClosedVar extends ClosedBase {
                 }
 
                 if (changed || force) {
-                    log(`ClosedVar: "${this.id}" ${this.value} -> ${val}`);
+                    log(`ClosedVar: "${this.id}" ${this.value} -> ${val} (${typeof val})`);
                     this.value = val;
                     for (var s of this.subs) {
                         s(this.value);
@@ -81,7 +81,7 @@ class ClosedVar extends ClosedBase {
         }
         else {
             if (val !== null && val !== undefined) {
-                log(`ClosedVar: "${this.id}" init -> ${val}`);
+                log(`ClosedVar: "${this.id}" init -> ${val} (${typeof val})`);
                 this.value = val;
                 this.initialized = true;
                 for (var s of this.subs) {

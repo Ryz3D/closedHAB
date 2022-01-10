@@ -134,10 +134,12 @@ function register(id, setup = {}) {
     if (setupOption("set", setup)) {
         vr.sub(data => {
             zwaySet(setup, ctx.back(id, data));
-            if (intervals[id] !== undefined) {
-                clearInterval(intervals[id]);
+            if (intervalFuncs[id]) {
+                if (intervals[id] !== undefined) {
+                    clearInterval(intervals[id]);
+                }
+                intervals[id] = setInterval(...intervalFuncs[id]);
             }
-            intervals[id] = setInterval(...intervalFuncs[id]);
         });
     }
     if (setupOption("get", setup)) {

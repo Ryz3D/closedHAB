@@ -1,0 +1,20 @@
+addons:
+  homekit:
+    setup:
+      publish:
+        balken:
+          name: Balken
+          type: Lightbulb
+          vars:
+            On:
+              id: balkenSwitch
+              forwardConverters:
+                - id: parseBool
+            Brightness:
+              id: balkenBrightness
+        rolli:
+          name: Rolli
+          type: WindowCovering
+          vars:
+            TargetPosition:
+              id: rolli

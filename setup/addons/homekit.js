@@ -28,11 +28,14 @@ function run(c) {
 
     acs = new hap.Accessory(
         setupOption("name"),
-        hap.uuid.generate("hap.closedhab.addon"),
+        hap.uuid.generate(setupOption("name")),
     );
-    log(
-        setupOption("name"),
-        hap.uuid.generate("hap.closedhab.addon"));
+
+    acs.getService(hap.Service.AccessoryInformation)
+        .setCharacteristic(hap.Characteristic.Manufacturer, "closedHAB")
+        .setCharacteristic(hap.Characteristic.Model, "closedHAB Homekit Addon")
+        .setCharacteristic(hap.Characteristic.SerialNumber, setupOption("user"))
+        .setCharacteristic(hap.Characteristic.FirmwareRevision, "1.0")
 
     for (var s of Object.entries(setupOption("publish"))) {
         if (s[1].type === undefined) {
@@ -40,10 +43,9 @@ function run(c) {
         }
         else {
             const servId = s[0];
-            const service = new hap.Service(
+            const service = new hap.Service[s[1].type](
                 s[1].name || "Device",
                 hap.uuid.generate(servId),
-                s[1].type
             );
             for (var v of Object.entries(s[1].vars)) {
                 if (v[1].id === undefined) {
@@ -55,13 +57,33 @@ function run(c) {
                         error(`Homekit: Var "${v[1].id}" not found`);
                     } else {
                         const chr = service.getCharacteristic(hap.Characteristic[v[0]]);
+                        const forwConvs = v[1].forwardConverters || [];
+                        const backConvs = v[1].backwardConverters || [];
+                        vr.sub(val => {
+                            for (var c of backConvs) {
+                                val = require(`./${c.id}.js`).convert(val, c.setup || {});
+                            }
+                            chr.setValue(val);
+                        });
                         chr.on(hap.CharacteristicEventTypes.GET, callback => {
-                            callback(undefined, vr.read());
+                            if (vr.initialized) {
+                                var val = vr.read();
+                                for (var c of backConvs) {
+                                    val = require(`./${c.id}.js`).convert(val, c.setup || {});
+                                }
+                                callback(undefined, val);
+                            }
+                            else {
+                                callback(undefined, chr.value);
+                            }
                         });
                         chr.on(hap.CharacteristicEventTypes.SET, (value, callback) => {
-                            warn(value);
-                            vr.send(value);
-                            callback();
+                            var val = value;
+                            for (var c of forwConvs) {
+                                val = require(`./${c.id}.js`).convert(val, c.setup || {});
+                            }
+                            vr.send(val);
+                            callback(undefined);
                         });
                     }
                 }
@@ -71,13 +93,7 @@ function run(c) {
     }
 
     acs.on("advertised", _ => {
-        log(`Homekit: Listening on port ${setupOption("port")}: ${setupOption("pin")}`);
-    });
-    log({
-        username: setupOption("user"),
-        pincode: setupOption("pin"),
-        port: setupOption("port"),
-        category: hap.Categories.BRIDGE,
+        log(`Homekit: Listening on port ${setupOption("port")} with pin ${setupOption("pin")}`);
     });
     acs.publish({
         username: setupOption("user"),
@@ -89,8 +105,14 @@ function run(c) {
 
 function stop() {
     return new Promise(resolve => {
-        acs.destroy()
-            .then(resolve);
+        if (acs) {
+            acs.unpublish()
+                .then(_ => acs.destroy())
+                .then(_ => resolve());
+        }
+        else {
+            resolve();
+        }
     });
 }
 

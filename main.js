@@ -34,7 +34,7 @@ const { log, warn, error } = require("./out");
 const yaml = require('js-yaml');
 
 const baseSetupPath = "./setup/";
-const setupFile = /^setup\w*.yml/; // string or regex
+const setupFile = /^\w+.yml/;
 const addonsPath = "addons/";
 const setupParser = yaml.load;
 
@@ -236,48 +236,28 @@ function loadSetupFile(path) {
     }
 }
 
-function initialize() {
-    var setupFound = false;
-    for (var entry of fs.readdirSync(baseSetupPath, { withFileTypes: true })) {
-        var isSetup = false;
-        if (typeof setupFile === "string") {
-            isSetup = entry.name === setupFile;
-        }
-        else {
-            isSetup = entry.name.match(setupFile) ? true : false;
-        }
-
-        if (isSetup) {
-            setupFound = true;
-            if (entry.isFile()) {
-                const path = `${baseSetupPath}${entry.name}`;
+function addSetupDir(dir) {
+    for (var subf of fs.readdirSync(baseSetupPath + dir, { withFileTypes: true })) {
+        if (subf.isFile()) {
+            if (subf.name.match(setupFile) !== null) {
+                const path = baseSetupPath + dir + subf.name;
                 fs.watchFile(path, { persistent: false }, _ => {
                     loadSetupFile(path);
                     reloadSetup();
                 });
                 loadSetupFile(path);
             }
-            else if (entry.isDirectory()) {
-                for (var subf of fs.readdirSync(baseSetupPath + entry.name)) {
-                    const addChar = (entry.name.endsWith("/") || entry.name.endsWith("\\")) ? "" : "/";
-                    const path = `${baseSetupPath}${entry.name}${addChar}${subf}`;
-                    fs.watchFile(path, { persistent: false }, _ => {
-                        loadSetupFile(path);
-                        reloadSetup();
-                    });
-                    loadSetupFile(path);
-                }
-            }
+        }
+        else if (subf.isDirectory()) {
+            addSetupDir(dir + subf.name + "/");
         }
     }
+}
 
-    if (setupFound) {
-        log("Setup loaded. Starting...");
-        reloadSetup();
-    }
-    else {
-        error("No setup file or directory found!");
-    }
+function initialize() {
+    addSetupDir("addon_setup/");
+    log("Starting...");
+    reloadSetup();
 }
 
 initialize();
