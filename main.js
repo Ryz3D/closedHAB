@@ -16,6 +16,7 @@ Addon Interface 1.0
 TODO:
     - timer addon
         - cron -> cli interface? files? local socket?
+        - trigger closedevent
     - still sub accumulation :/
     - what if sub 1 closes and sub 2 moves into its place?
         - random unique id

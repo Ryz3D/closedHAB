@@ -1,5 +1,5 @@
 addons:
   homekit:
     setup:
-      name: Minimirco
-      user: 82:C5:1D:5D:6F:EA
+      name: closedHAB
+      user: 82:C5:1D:5D:6F:EE
