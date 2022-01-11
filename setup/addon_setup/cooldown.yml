@@ -1,0 +1,68 @@
+addons:
+  close:
+    setup:
+      port: 8087
+      auth: Basic YWRtaW46c21hcnRob21l
+      cors: echo
+      frontend:
+        name: Mircos cooler Server
+      converters:
+        balken_switch:
+          forwardConverters:
+            - id: parseFloat
+        balken_brightness:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+
+        klotz_switch:
+          forwardConverters:
+            - id: parseFloat
+        klotz_hue:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+        klotz_saturation:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+        klotz_brightness:
+          forwardConverters:
+            - id: parseFloat
+            - id: round
+
+        m_rolli:
+          forwardConverters:
+            - id: parseFloat
+              setup:
+                allowString: true
+        m_stecki_switch:
+          forwardConverters:
+            - id: parseFloat
+        m_stecki_sensor:
+          forwardConverters:
+            - id: parseFloat
+
+        l_rolli:
+          forwardConverters:
+            - id: parseFloat
+              setup:
+                allowString: true
+        l_stecki_switch:
+          forwardConverters:
+            - id: parseFloat
+        l_stecki_sensor:
+          forwardConverters:
+            - id: parseFloat
+
+        e_rolli:
+          forwardConverters:
+            - id: parseFloat
+              setup:
+                allowString: true
+        e_stecki_switch:
+          forwardConverters:
+            - id: parseFloat
+        e_stecki_sensor:
+          forwardConverters:
+            - id: parseFloat

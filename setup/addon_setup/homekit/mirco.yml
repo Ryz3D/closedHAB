@@ -4,43 +4,43 @@ addons:
       publish:
         balken:
           name: Balken
-          type: Lightbulb
-          vars:
-            On:
-              id: balken_switch
-              forwardConverters:
-                - id: parseBool
-            Brightness:
-              id: balken_brightness
+          services:
+            Lightbulb:
+              On:
+                id: balken_switch
+                forwardConverters:
+                  - id: parseBool
+              Brightness:
+                id: balken_brightness
         klotz:
           name: Klotz
-          type: Lightbulb
-          vars:
-            On:
-              id: klotz_switch
-              forwardConverters:
-                - id: parseBool
-              backwardConverters:
-                - id: parseBool
-                  setup:
-                    back: true
-            Hue:
-              id: klotz_hue
-            Saturation:
-              id: klotz_saturation
-            Brightness:
-              id: klotz_brightness
+          services:
+            Lightbulb:
+              On:
+                id: klotz_switch
+                forwardConverters:
+                  - id: parseBool
+                backwardConverters:
+                  - id: parseBool
+                    setup:
+                      back: true
+              Hue:
+                id: klotz_hue
+              Saturation:
+                id: klotz_saturation
+              Brightness:
+                id: klotz_brightness
         m_rolli:
           name: M Rolli
-          type: WindowCovering
-          vars:
-            TargetPosition:
-              id: m_rolli
+          services:
+            WindowCovering:
+              TargetPosition:
+                id: m_rolli
         m_stecki:
           name: Röhre
-          type: Lightbulb
-          vars:
-            On:
-              id: m_stecki_switch
-              forwardConverters:
-                - id: parseBool
+          services:
+            Lightbulb:
+              On:
+                id: m_stecki_switch
+                forwardConverters:
+                  - id: parseBool

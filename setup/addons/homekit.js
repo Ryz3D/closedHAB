@@ -26,30 +26,39 @@ function setupOption(id, varSetup = {}) {
 function run(c) {
     ctx = c;
 
-    acs = new hap.Accessory(
+    acs = new hap.Bridge(
         setupOption("name"),
         hap.uuid.generate(setupOption("name")),
     );
 
     acs.getService(hap.Service.AccessoryInformation)
         .setCharacteristic(hap.Characteristic.Manufacturer, "closedHAB")
-        .setCharacteristic(hap.Characteristic.Model, "closedHAB Homekit Addon")
+        .setCharacteristic(hap.Characteristic.Model, "closedHAB Bridge")
         .setCharacteristic(hap.Characteristic.SerialNumber, setupOption("user"))
-        .setCharacteristic(hap.Characteristic.FirmwareRevision, "1.0")
+        .setCharacteristic(hap.Characteristic.FirmwareRevision, "1.0");
 
-    for (var s of Object.entries(setupOption("publish"))) {
-        if (s[1].type === undefined) {
-            error(`Homekit: Type of service "${s[0]}" is not defined`);
-        }
-        else {
-            const servId = s[0];
-            const service = new hap.Service[s[1].type](
-                s[1].name || "Device",
-                hap.uuid.generate(servId),
+    for (var a of Object.entries(setupOption("publish"))) {
+        const acsId = a[0];
+        log(`Homekit: Adding Device ${a[1].name || acsId}`);
+        const bridgedAcs = new hap.Accessory(
+            a[1].name || acsId,
+            hap.uuid.generate(acsId + "acs"),
+        );
+        acs.getService(hap.Service.AccessoryInformation)
+            .setCharacteristic(hap.Characteristic.Manufacturer, "closedHAB")
+            .setCharacteristic(hap.Characteristic.Model, "closedHAB Device")
+            .setCharacteristic(hap.Characteristic.SerialNumber, setupOption("user"))
+            .setCharacteristic(hap.Characteristic.FirmwareRevision, "1.0");
+
+        for (var s of Object.entries(a[1].services || {})) {
+            const service = new hap.Service[s[0]](
+                a[1].name || acsId,
+                hap.uuid.generate(acsId),
             );
-            for (var v of Object.entries(s[1].vars)) {
+
+            for (var v of Object.entries(s[1])) {
                 if (v[1].id === undefined) {
-                    error(`Homekit: Characteristic "${s[0]}.${v[0]}" has no id`);
+                    error(`Homekit: Characteristic "${acsId}.${s[0]}.${v[0]}" has no id`);
                 }
                 else {
                     const vr = ctx.findVar(v[1].id);
@@ -91,19 +100,27 @@ function run(c) {
                     }
                 }
             }
-            acs.addService(service);
+            bridgedAcs.addService(service);
         }
+
+        acs.addBridgedAccessory(bridgedAcs);
     }
 
     acs.on("advertised", _ => {
         log(`Homekit: Listening on port ${setupOption("port")} with pin ${setupOption("pin")}`);
     });
-    acs.publish({
-        username: setupOption("user"),
-        pincode: setupOption("pin"),
-        port: setupOption("port"),
-        category: hap.Categories.BRIDGE,
-    });
+
+    try {
+        acs.publish({
+            username: setupOption("user"),
+            pincode: setupOption("pin"),
+            port: setupOption("port"),
+            category: hap.Categories.BRIDGE,
+        });
+    }
+    catch (e) {
+        error(`Homekit: Can't start: ${e}`);
+    }
 }
 
 function stop() {

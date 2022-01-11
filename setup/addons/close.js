@@ -49,13 +49,13 @@ function run(c) {
     const varBackConvs = {};
     for (var e of Object.entries(ctx.setup.converters)) {
         varForwConvs[e[0]] = [];
-        for (var c of e[1].forwardConverters || []) {
+        for (var c of Object.values(e[1].forwardConverters || {})) {
             const idBuf = c.id;
             const ctxBuf = { ...ctx, setup: c.setup || {} };
             varForwConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, ctxBuf));
         }
         varBackConvs[e[0]] = [];
-        for (var c of e[1].backwardConverters || []) {
+        for (var c of Object.values(e[1].backwardConverters || {})) {
             const idBuf = c.id;
             const ctxBuf = { ...ctx, setup: c.setup || {} };
             varBackConvs[e[0]].push(v => require(`./${idBuf}.js`).convert(v, ctxBuf));

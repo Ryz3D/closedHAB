@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^4.17.2",
     "hap-nodejs": "latest",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "react-window-size": "^1.2.2"
   }
 }

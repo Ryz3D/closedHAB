@@ -4,15 +4,15 @@ addons:
       publish:
         e_rolli:
           name: Rollladen Schlafzimmer
-          type: WindowCovering
-          vars:
-            TargetPosition:
-              id: e_rolli
+          services:
+            WindowCovering:
+              TargetPosition:
+                id: e_rolli
         e_stecki:
           name: Schrankbeleuchtung
-          type: Lightbulb
-          vars:
-            On:
-              id: e_stecki_switch
-              forwardConverters:
-                - id: parseBool
+          services:
+            Lightbulb:
+              On:
+                id: e_stecki_switch
+                forwardConverters:
+                  - id: parseBool

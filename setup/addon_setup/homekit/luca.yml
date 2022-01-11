@@ -4,15 +4,15 @@ addons:
       publish:
         l_rolli:
           name: L Rolli
-          type: WindowCovering
-          vars:
-            TargetPosition:
-              id: l_rolli
+          services:
+            WindowCovering:
+              TargetPosition:
+                id: l_rolli
         l_stecki:
           name: L Stecki
-          type: Lightbulb
-          vars:
-            On:
-              id: l_stecki_switch
-              forwardConverters:
-                - id: parseBool
+          services:
+            Lightbulb:
+              On:
+                id: l_stecki_switch
+                forwardConverters:
+                  - id: parseBool

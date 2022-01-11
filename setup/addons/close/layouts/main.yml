@@ -1,32 +1,54 @@
 grid:
-  - # rolli
-    - type: button
-      text: icon-chevron up-
-      var: m_rolli
-      value: 100
-    - type: button
-      text: icon-stop circle-
-      var: m_rolli
-      value: STOP
-    - type: button
-      text: icon-chevron down-
-      var: m_rolli
-      value: 0
-  - # röhre, balken
+  -
+    - type: header
+      text: Rollladen
+  -
+    - type: buttongroup
+      buttons:
+        - text: icon-chevron up-
+          var: m_rolli
+          value: 100
+        - text: icon-chevron down-
+          var: m_rolli
+          value: 0
+  -
+    - type: header
+      text: Beleuchtung
+  -
     -
+      - type: text
+        header: "Röhre Watt:"
+        var: m_stecki_sensor
       - type: toggle
         text: Röhre
         var: m_stecki_switch
       - type: toggle
         text: Balken
         var: balken_switch
+      - type: toggle
+        text: Klotz
+        var: klotz_switch
     -
       - type: slider
-        vertical: true
-        text: Balken
+        header: Balken
         var: balken_brightness
+        vertical: true
+  -
+    - type: header
+      text: Klotz
+  -
+    - type: slider
+      var: klotz_hue
+      max: 360
+      color: hue
+  -
+    - type: slider
+      var: klotz_saturation
+  -
+    - type: slider
+      var: klotz_brightness
   -
     - type: color-sb
-      text: Klotz
+      header: Klotz
       varS: klotz_saturation
       varB: klotz_brightness
