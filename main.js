@@ -1,6 +1,6 @@
 /*
 
-Addon Interface 1.0
+closedHAB context 1.0
     - setup {}
     - registerVar(var)
     - unregisterVar(id)
@@ -14,6 +14,7 @@ Addon Interface 1.0
 /*
 
 TODO:
+    - openhab addon lol
     - timer addon
         - cron -> cli interface? files? local socket?
         - trigger closedevent
@@ -26,8 +27,6 @@ TODO:
         - sse auth
     - rest:
         - retry on timeout (or reset item)
-        - why do i have so many timeouts?
-            - delay some requests, especially to same server (zway too!)
         - sse events
         - sse channels
 
@@ -38,7 +37,7 @@ const { log, warn, error } = require("./out");
 const yaml = require('js-yaml');
 
 const baseSetupPath = "./setup/";
-const setupFile = /^\w+.yml/;
+const setupFile = /^\w+.yaml/;
 const addonsPath = "addons/";
 const setupParser = yaml.load;
 
@@ -216,6 +215,9 @@ function extendRecursive(a, b) {
         }
     }
     else {
+        if (a !== undefined && b !== undefined) {
+            console.warn(`Setup files set value twice: "${a}" and "${b}"`);
+        }
         return b === undefined ? a : b;
     }
 }

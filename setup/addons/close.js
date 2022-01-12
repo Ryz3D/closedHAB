@@ -7,7 +7,7 @@ var ctx;
 var app, listener;
 const publicDir = "./setup/addons/close/public/";
 const layoutDir = "./setup/addons/close/layouts/";
-const layoutExt = ".yml";
+const layoutExt = ".yaml";
 const layoutParser = yaml.load;
 
 function checkAuth(req, res) {

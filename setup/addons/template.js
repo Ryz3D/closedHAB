@@ -17,7 +17,7 @@ function stop() {
     });
 }
 
-function register(id, setup = {}) {
+function register(id, setup) {
     const vr = new ClosedVar(id);
     ctx.registerVar(vr);
     vars.push(vr);

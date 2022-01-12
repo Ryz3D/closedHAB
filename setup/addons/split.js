@@ -15,19 +15,11 @@ function convert(value, c) {
 
     try {
         const split = value.split(ctx.setup.sep || ",");
-        if (typeof ctx.setup.index === "number") {
-            if (ctx.setup.index >= 0 && ctx.setup.index < split.length) {
-                return split[ctx.setup.index];
-            }
-            else {
-                error(`split: Index ${ctx.setup.index} out of range for "${value}"`);
-            }
-        }
-        else if (ctx.setup.mappers !== undefined) {
+        if (ctx.setup.mappers !== undefined) {
             return split.map(v => applyConverters(v, ctx.setup.mappers));
         }
         else {
-            return split[0];
+            return split;
         }
     }
     catch (e) {

@@ -1,4 +1,4 @@
 /node_modules
 /persist
 /setup/addon_setup
-/setup/addons/close/layouts/*.yml
+/setup/addons/close/layouts/*.yaml

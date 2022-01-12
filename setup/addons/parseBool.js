@@ -9,7 +9,12 @@ function convert(value, ctx) {
         return value >= 0.5;
     }
     else {
-        return value ? 1 : 0;
+        if (typeof value === "string") {
+            return value.toLowerCase() === "true" ? 1 : 0;
+        }
+        else {
+            return value ? 1 : 0;
+        }
     }
 }
 
