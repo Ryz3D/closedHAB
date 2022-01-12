@@ -19,4 +19,4 @@ The file structure should look like this by default:
   - addons
     - *.js
 
-Click on any of the above to find out how to use the files in order to set up and extend closedHAB.
+Click on any of the above to find out how to use these files in order to set up and extend closedHAB.
