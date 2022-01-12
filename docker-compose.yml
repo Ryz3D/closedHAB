@@ -4,7 +4,6 @@ services:
     container_name: "closedhab"
     image: "mircoheitmann/closedhab:latest"
     restart: always
-    ports:
-      - "8087:8087"
+    network_mode: host
     volumes:
-      - "./setup:/usr/src/setup"
+      - "./setup:/usr/src/closedhab/setup"
