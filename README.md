@@ -12,6 +12,9 @@ You can run closedHAB easily on Docker by using [the Docker Image](https://hub.d
 The file structure should look like this by default:
 - docker-compose.yml
 - setup
-  - setup*.yml
+  - addon_setup
+    - setup*.yml
   - addons
     - *.js
+
+Click on any of the above to find out how to use the files in order to set up and extend closedHAB.
