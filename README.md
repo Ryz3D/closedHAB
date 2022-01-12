@@ -12,11 +12,11 @@ A simple JavaScript service for connecting any Smart Home device. Easily extenda
 
 You can run closedHAB easily on Docker by using [the Docker Image](https://hub.docker.com/repository/docker/mircoheitmann/closedhab).
 The file structure should look like this by default:
-- docker-compose.yml
+- [docker-compose.yml](https://github.com/Ryz3D/closedHAB/wiki/docker-compose.yml)
 - setup
   - addon_setup
-    - setup*.yml
+    - [setup*.yaml](https://github.com/Ryz3D/closedHAB/wiki/setup%2A.yaml)
   - addons
-    - *.js
+    - [*.js](https://github.com/Ryz3D/closedHAB/wiki/%2A.js)
 
 Click on any of the above to find out how to use these files in order to set up and extend closedHAB.
