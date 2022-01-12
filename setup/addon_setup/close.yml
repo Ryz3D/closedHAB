@@ -4,8 +4,6 @@ addons:
       port: 8087
       auth: Basic YWRtaW46c21hcnRob21l
       cors: echo
-      frontend:
-        name: Mircos cooler Server
       converters:
         balken_switch:
           forwardConverters:

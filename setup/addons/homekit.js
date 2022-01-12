@@ -39,7 +39,7 @@ function run(c) {
 
     for (var a of Object.entries(setupOption("publish"))) {
         const acsId = a[0];
-        log(`Homekit: Adding Device ${a[1].name || acsId}`);
+        log(`Homekit: Adding Device "${a[1].name || acsId}"`);
         const bridgedAcs = new hap.Accessory(
             a[1].name || acsId,
             hap.uuid.generate(acsId + "acs"),
