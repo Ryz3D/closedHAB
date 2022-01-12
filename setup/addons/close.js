@@ -233,7 +233,13 @@ function run(c) {
             res.json({ error: 1, message: "not found" });
         }
         else {
-            res.redirect("/");
+            if (ctx.setup.notFoundPath) {
+                res.redirect(ctx.setup.notFoundPath);
+            }
+            else {
+                res.statusCode = 404;
+                res.send("Not Found");
+            }
         }
     });
 
