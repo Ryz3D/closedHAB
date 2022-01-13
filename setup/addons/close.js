@@ -1,25 +1,32 @@
-const fs = require("fs");
 const express = require("express");
-const yaml = require('js-yaml');
 const { log, warn, error } = require("../../out");
 
 var ctx;
 var app, listener;
-const publicDir = "./setup/addons/close/public/";
-const layoutDir = "./setup/addons/close/layouts/";
-const layoutExt = ".yaml";
-const layoutParser = yaml.load;
+const publicDir = "./setup/addons/close/";
 
-function checkAuth(req, res) {
-    if (ctx.setup.auth) {
-        const result = req.headers.authorization === ctx.setup.auth;
-        if (!result) {
-            res.sendStatus(403);
+function checkAuthText(text) {
+    if (ctx.setup.users) {
+        const result = (ctx.setup.users || []).findIndex(u => u.auth === text);
+        if (result === -1) {
+            return false;
         }
-        return result;
+        else {
+            return true;
+        }
     }
     else {
         return true;
+    }
+}
+
+function checkAuth(req, res) {
+    if (checkAuthText(req.headers.authorization)) {
+        return true;
+    }
+    else {
+        res.sendStatus(403);
+        return false;
     }
 }
 
@@ -66,6 +73,7 @@ function run(c) {
 
     app.options("/api/layout/list", options);
     app.options("/api/layout/get", options);
+    app.options("/api/layout/home", options);
     app.options("/api/var/list", options);
     app.options("/api/var/get", options);
     app.options("/api/var/set", options);
@@ -77,55 +85,53 @@ function run(c) {
         if (!checkAuth(req, res)) {
             return;
         }
-        fs.opendir(layoutDir, (e, dir) => {
-            if (e) {
-                warn(`close: /api/layout/list failed: ${e}`);
-                res.json({ error: 1, message: e.toString() });
-            }
-            else {
-                var layouts = [];
-                try {
-                    while (f = dir.readSync()) {
-                        if (f.isFile() && f.name.endsWith(layoutExt)) {
-                            layouts.push(f.name.slice(0, -layoutExt.length));
-                        }
-                    }
-                    dir.closeSync();
-                    res.json({ error: 0, data: layouts });
-                }
-                catch (e) {
-                    warn(`close: /api/layout/list failed: ${e}`);
-                    res.json({ error: 1, message: e.toString() });
-                }
-            }
-        });
+        res.json({ error: 0, data: Object.keys(ctx.setup.layouts) });
     });
     app.get("/api/layout/get", (req, res) => {
         cors(req, res);
         if (!checkAuth(req, res)) {
             return;
         }
-        if (req.query.q) {
-            const path = `${layoutDir}${decodeURIComponent(req.query.q).replace(/[^\w/_]/g, "")}${layoutExt}`;
-            try {
-                fs.readFile(path, (e, data) => {
-                    if (e) {
-                        warn(`close: /api/layout/get couldn't read file "${path}": ${e}`);
-                        res.json({ error: 1, message: e.toString() });
-                    }
-                    else {
-                        res.json({ error: 0, data: layoutParser(data.toString("utf-8")) });
-                    }
-                });
-            }
-            catch (e) {
-                warn(`close: /api/layout/get couldn't read file "${path}": ${e}`);
-                res.json({ error: 1, message: e.toString() });
-            }
+        if (req.query.q === undefined) {
+            res.json({ error: 1, message: "need ?q query for layout path" });
         }
         else {
-            warn("close: /api/layout/get needs ?q query for layout path");
-            res.json({ error: 1, message: "need ?q query for layout path" });
+            const id = decodeURIComponent(req.query.q);
+            if (ctx.setup.layouts[id] === undefined) {
+                res.json({ error: 1, message: `layout "${id}" not found` });
+            }
+            else {
+                res.json({ error: 0, data: ctx.setup.layouts[id] });
+            }
+        }
+    });
+    app.get("/api/layout/home", (req, res) => {
+        cors(req, res);
+        if (!checkAuth(req, res)) {
+            return;
+        }
+        const altID = Object.keys(ctx.setup.layouts)[0];
+        if (altID === undefined) {
+            res.json({ error: 1, message: `no layouts defined` });
+        }
+        else {
+            if (ctx.setup.users === undefined) {
+                res.json({ error: 0, data: altID });
+            }
+            else {
+                const user = (ctx.setup.users || []).findIndex(u => u.auth === req.headers.authorization);
+                if (user === -1) {
+                    res.json({ error: 0, data: altID });
+                }
+                else {
+                    if (ctx.setup.users[user].home === undefined) {
+                        res.json({ error: 0, data: altID });
+                    }
+                    else {
+                        res.json({ error: 0, data: ctx.setup.users[user].home });
+                    }
+                }
+            }
         }
     });
     app.get("/api/var/list", (req, res) => {
@@ -140,11 +146,12 @@ function run(c) {
         if (!checkAuth(req, res)) {
             return;
         }
-        res.set("Access-Control-Allow-Origin", "*");
         if (req.query.q) {
-            const id = decodeURIComponent(req.query.q).replace(/[^\w/_]/g, "");
+            const id = decodeURIComponent(req.query.q);
             const vr = ctx.findVar(id);
-            if (vr) {
+            if (vr === undefined) {
+                res.json({ error: 1, message: `var "${id}" not found` });
+            } else {
                 if (vr.initialized) {
                     var data = vr.read();
                     for (var f of varBackConvs[vr.id] || []) {
@@ -156,13 +163,8 @@ function run(c) {
                     res.json({ error: 1, message: "uninitialized" });
                 }
             }
-            else {
-                warn(`close: /api/var/get can't find var "${id}"`);
-                res.json({ error: 1, message: "not found" });
-            }
         }
         else {
-            warn("close: /api/var/get needs ?q query for id");
             res.json({ error: 1, message: "need ?q query for id" });
         }
     });
@@ -171,8 +173,11 @@ function run(c) {
         if (!checkAuth(req, res)) {
             return;
         }
-        if (req.query.q && req.query.v) {
-            const id = decodeURIComponent(req.query.q).replace(/[^\w/_]/g, "");
+        if (req.query.q === undefined || req.query.v === undefined) {
+            res.json({ error: 1, message: "need ?q query for id and ?v for value" });
+        }
+        else {
+            const id = decodeURIComponent(req.query.q);
             var val = decodeURIComponent(req.query.v);
             const vr = ctx.findVar(id);
             if (vr) {
@@ -183,39 +188,35 @@ function run(c) {
                 res.json({ error: 0 });
             }
             else {
-                warn(`close: /api/var/set can't find var "${id}"`);
                 res.json({ error: 1, message: "not found" });
             }
-        }
-        else {
-            warn("close: /api/var/set needs ?q query for id and ?v for value");
-            res.json({ error: 1, message: "need ?q query for id and ?v for value" });
         }
     });
     app.get("/api/var/sub", (req, res) => {
         cors(req, res);
-        /*
-        if (!checkAuth(req, res)) {
-            return;
+        // default js eventstream doesn't support auth header :(
+        if (!checkAuthText(decodeURIComponent(req.query.a))) {
+            res.sendStatus(403);
         }
-        */
-        res.contentType("text/event-stream");
-        res.flushHeaders();
-        const subClosers = [];
-        for (var v of ctx.listVars()) {
-            const idBuf = v.id;
-            subClosers.push(v.sub(val => {
-                for (var f of varBackConvs[idBuf] || []) {
-                    val = f(val);
-                }
-                res.write(`event: ${idBuf}\ndata: ${val}\n\n`);
-            }));
-        }
-        req.on("close", _ => {
-            for (var f of subClosers) {
-                f();
+        else {
+            res.contentType("text/event-stream");
+            res.flushHeaders();
+            const subClosers = [];
+            for (var v of ctx.listVars()) {
+                const idBuf = v.id;
+                subClosers.push(v.sub(val => {
+                    for (var f of varBackConvs[idBuf] || []) {
+                        val = f(val);
+                    }
+                    res.write(`event: ${idBuf}\ndata: ${val}\n\n`);
+                }));
             }
-        });
+            req.on("close", _ => {
+                for (var f of subClosers) {
+                    f();
+                }
+            });
+        }
     });
     app.get("/api/setup", (req, res) => {
         cors(req, res);
@@ -226,7 +227,7 @@ function run(c) {
     });
 
     app.use("/", express.static(publicDir));
-    app.use((req, res, next) => {
+    app.use((req, res) => {
         res.statusCode = 404;
         if (req.path.startsWith("/api/")) {
             cors(req, res);

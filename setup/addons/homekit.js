@@ -12,6 +12,7 @@ const defaultSetup = {
 
 var ctx;
 var acs;
+const intervals = [];
 
 function setupOption(id, varSetup = {}) {
     if (varSetup[id] !== undefined) {
@@ -75,6 +76,14 @@ function run(c) {
                             }
                             chr.setValue(val);
                         });
+                        intervals.push(setInterval(_ => {
+                            var val = vr.read();
+                            for (var c of backConvs) {
+                                const convCtx = { ...ctx, setup: c.setup || {} };
+                                val = require(`./${c.id}.js`).convert(val, convCtx);
+                            }
+                            chr.setValue(val);
+                        }));
                         chr.on(hap.CharacteristicEventTypes.GET, callback => {
                             if (vr.initialized) {
                                 var val = vr.read();
