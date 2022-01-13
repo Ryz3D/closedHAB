@@ -279,7 +279,7 @@ function addSetupDir(dir) {
 function initialize() {
     try {
         addSetupDir("addon_setup/");
-        log("Starting... from the freshest docker image");
+        log("Starting...");
         reloadSetup();
     }
     catch (e) {
