@@ -266,11 +266,9 @@ function initialize() {
         reloadAll(true);
         watch(setupPath, {
             persistent: false,
-            recursive: true,
         }, reloadAll);
         watch(addonsPath, {
             persistent: false,
-            recursive: true,
         }, reloadAll);
     }
     catch (e) {
