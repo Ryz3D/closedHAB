@@ -1,20 +1,12 @@
 const express = require("express");
 const { log, warn, error } = require("../out");
-const { exec } = require("child_process");
+const process = require("process");
+const { pipeline } = require("stream");
 
 // executes update script over ssh when new docker image is pushed (https://docs.docker.com/docker-hub/webhooks/)
 // make sure that
 //  - the container is reachable on the webhook port (default 3001) by dockerhub (set up port forwarding)
-//  - the destination (typically docker host) is reachable on ssh and keys are exchanged
-//  - the pull.sh script exists (example below) and set up as "command" with full path
-
-/* pull.sh example
-
-#!/bin/bash
-cd /usr/src/closedhab
-docker-compose pull && docker-compose down && docker-compose up -d
-
-*/
+//  - the host has the deamon running on port 2375
 
 var ctx;
 var app, listener;
@@ -44,20 +36,35 @@ function run(c) {
         }
         var passedCheck = true;
         if (ctx.setup.tag) {
-            passedCheck = req.body.push_data.tag === ctx.setup.tag;
+            passedCheck = (req.body.push_data || {}).tag === ctx.setup.tag;
         }
         if (passedCheck && !updating) {
             log("docker-cd: New Image, prepare for update.");
-            exec(`ssh -o StrictHostKeyChecking=no ${ctx.setup.destination || "localhost"} ${ctx.setup.command || "./pull.sh"}`, (execerr, stdout, stderr) => {
-                if (execerr) {
-                    error(`docker-cd: ssh: ${execerr}`);
-                }
-                if (stderr) {
-                    error(`docker-cd: ssh: ${stderr}`);
-                }
-                log(`docker-cd: ssh: ${stdout}`);
-            });
-            updating = true;
+            fetch(`http://${ctx.setup.host}:${ctx.setup.port || 2375}/images/create?fromImage=mircoheitmann/closedhab:${ctx.setup.tag || "latest"}`, {
+                method: "POST",
+                headers: {
+                    "Accept": "*/*",
+                },
+            })
+                .then(res => {
+                    if (res.status === 200) {
+                        res.body.on("end", _ => {
+                            log("docker-cd: Pull should be done now.");
+                        })
+                        res.body.on("error", e => {
+                            error(`docker-cd: Failed to read docker response: ${e}`);
+                        })
+                        pipeline(res.body, process.stdout, (err) => {
+                            if (err) {
+                                error(err);
+                            }
+                        });
+                    }
+                    else {
+                        error(`docker-cd: Docker API replied with ${res.status} ${res.statusText}`);
+                    }
+                })
+                .catch(e => error(`docker-cd: Docker API call failed${e}`));
         }
         res.json({});
     });
