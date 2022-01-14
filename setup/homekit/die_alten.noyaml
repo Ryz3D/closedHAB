@@ -1,0 +1,18 @@
+addons:
+  homekit:
+    setup:
+      publish:
+        e_rolli:
+          name: Rollladen Schlafzimmer
+          services:
+            WindowCovering:
+              TargetPosition:
+                id: e_rolli
+        e_stecki:
+          name: Schrankbeleuchtung
+          services:
+            Lightbulb:
+              On:
+                id: e_stecki_switch
+                forwardConverters:
+                  - id: parseBool

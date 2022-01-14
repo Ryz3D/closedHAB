@@ -1,27 +1,14 @@
 /*
 
-closedHAB context 1.0
-    - setup {}
-    - registerVar(var)
-    - unregisterVar(id)
-    - findVar(id)
-    - listVars()
-    - back(id, data)
-    - forw(id, data)
-
-*/
-
-/*
-
 TODO:
     - openhab addon lol
+    - events as var attribute
+        - triggers: onchange, onequal, rising, falling, oninit
+        - events: send, exec
     - timer addon
-        - cron -> cli interface? files? local socket?
-        - trigger closedevent
     - still sub accumulation :/
     - what if sub 1 closes and sub 2 moves into its place?
         - random unique id
-    - reload converters properly
     - websocket api
     - close:
         - sse auth
@@ -36,16 +23,16 @@ const fs = require("fs");
 const { log, warn, error } = require("./out");
 const yaml = require('js-yaml');
 
-const baseSetupPath = "./setup/";
+const setupPath = "./setup/";
 const setupFile = /^\w+.yaml/;
-const addonsPath = "addons/";
+const addonsPath = "./addons/";
 const setupParser = yaml.load;
 
 var setup = { addons: {} };
 var loadedModules = [];
-const vars = [];
-const varForwConvs = {};
-const varBackConvs = {};
+var vars = [];
+var varForwConvs = {};
+var varBackConvs = {};
 
 function registerVar(vr) {
     log(`Registering var "${vr.id}"`);
@@ -82,42 +69,8 @@ function findVar(id) {
     }
 }
 
-function unloadModule(id) {
-    return new Promise(resolve => {
-        const index = loadedModules.findIndex(m => m.id === id);
-        if (index === -1) {
-            log(`Tried unloading module "${id}" which is not loaded`);
-            resolve();
-        }
-        else {
-            if (loadedModules[index].mod.stop) {
-                loadedModules[index].mod.stop()
-                    .then(resolve);
-            }
-            else {
-                resolve();
-            }
-        }
-    });
-}
-
 function loadModule(id, reloadCb = _ => { }) {
-    const modPath = `${baseSetupPath}${addonsPath}${id}.js`;
-    if (loadedModules.findIndex(m => m.id === id) === -1) {
-        fs.watchFile(modPath, { persistent: false }, _ => {
-            log(`Reloading addon "${id}"`);
-            try {
-                unloadModule(id)
-                    .then(_ => {
-                        delete require.cache[require.resolve(modPath)];
-                        reloadCb(loadModule(id));
-                    });
-            }
-            catch (e) {
-                error(`Can't reload module "${id}": ${e}`);
-            }
-        });
-    }
+    const modPath = `${addonsPath}${id}.js`;
     try {
         const mod = require(modPath);
         return loadedModules[loadedModules.push({ id, mod }) - 1].mod;
@@ -225,15 +178,7 @@ function extendRecursive(a, b) {
 function reloadSetup() {
     for (var entry of Object.entries(setup)) {
         if (entry[0] === "addons") {
-            for (var iAddon in loadedModules) {
-                const oldAddon = loadedModules[iAddon];
-                if (!entry[1][oldAddon.id]) {
-                    fs.unwatchFile(`${baseSetupPath}${addonsPath}${oldAddon.id}.js`);
-                    unloadModule(oldAddon.id);
-                    delete loadedModules[iAddon];
-                }
-            }
-            // load addons which can register vars first
+            // load addons with vars first
             for (var a of Object.entries(entry[1]).filter(a => a[1].register !== undefined)) {
                 loadAddon(a[0], a[1].setup, a[1].register);
             }
@@ -259,15 +204,10 @@ function loadSetupFile(path) {
 }
 
 function addSetupDir(dir) {
-    for (var subf of fs.readdirSync(baseSetupPath + dir, { withFileTypes: true })) {
+    for (var subf of fs.readdirSync(dir, { withFileTypes: true })) {
         if (subf.isFile()) {
             if (subf.name.match(setupFile) !== null) {
-                const path = baseSetupPath + dir + subf.name;
-                fs.watchFile(path, { persistent: false }, _ => {
-                    loadSetupFile(path);
-                    reloadSetup();
-                });
-                loadSetupFile(path);
+                loadSetupFile(dir + subf.name);
             }
         }
         else if (subf.isDirectory()) {
@@ -276,11 +216,38 @@ function addSetupDir(dir) {
     }
 }
 
+function reloadAll() {
+    for (var a of loadedModules) {
+        if (a.mod.stop) {
+            a.mod.stop();
+        }
+        delete require.cache[require.resolve(`${addonsPath}${a.id}`)];
+    }
+    loadedModules = [];
+    for (var v of vars) {
+        v.destroy();
+    }
+
+    vars = [];
+    varForwConvs = {};
+    varBackConvs = {};
+    setup = {};
+    addSetupDir(setupPath);
+    reloadSetup();
+}
+
 function initialize() {
     try {
-        addSetupDir("addon_setup/");
         log("Starting...");
-        reloadSetup();
+        reloadAll();
+        fs.watch(setupPath, {
+            persistent: false,
+            recursive: true,
+        }, reloadAll);
+        fs.watch(addonsPath, {
+            persistent: false,
+            recursive: true,
+        }, reloadAll);
     }
     catch (e) {
         error(e);

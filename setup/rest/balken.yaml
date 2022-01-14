@@ -1,0 +1,25 @@
+addons:
+  rest:
+    register:
+      balken_brightness:
+        setup:
+          get: http://esp32dev1/data
+          set: http://esp32dev1/brightness?value={}
+        forwardConverters:
+          - id: json
+            setup:
+              path: brightness
+          - id: parseFloat
+      balken_switch:
+        setup:
+          get: http://esp32dev1/data
+          set: http://esp32dev1/power?value={}
+        forwardConverters:
+          - id: json
+            setup:
+              path: power
+          - id: parseSwitch
+        backwardConverters:
+          - id: parseSwitch
+            setup:
+              back: true

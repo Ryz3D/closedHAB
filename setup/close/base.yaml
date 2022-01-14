@@ -1,0 +1,14 @@
+addons:
+  close:
+    setup:
+      port: 8087
+      auth: Basic YWRtaW46c21hcnRob21l
+      cors: echo
+      notFoundPath: /
+      users:
+        - auth: Basic bWlyY286Y2xvc2VkaGFi
+          home: mirco
+        - auth: Basic bHVjYTpjbG9zZWRoYWI=
+          home: luca
+        - auth: Basic ZGllIGFsdGVuOmNsb3NlZGhhYg==
+          home: die_alten
