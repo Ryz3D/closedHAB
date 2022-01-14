@@ -1,5 +1,0 @@
-addons:
-  homekit:
-    setup:
-      name: closedHAB_M
-      user: 82:C5:1D:5D:6F:A8
