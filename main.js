@@ -29,7 +29,6 @@ const addonsPath = "./addons/";
 const setupParser = yaml.load;
 
 var loadedModules = [];
-var settleDelayOver = false;
 var settleTimeout;
 var vars = [];
 var varForwConvs = {};
@@ -74,7 +73,7 @@ function findVar(id) {
     }
 }
 
-function loadModule(id, reloadCb = _ => { }) {
+function loadModule(id) {
     const modPath = `${addonsPath}${id}.js`;
     try {
         const mod = require(modPath);
@@ -143,7 +142,6 @@ function loadAddon(id, addon_setup = {}, addon_register = [], mod) {
         };
         if (mod.register) {
             mod.register(r[0], r[1].setup || {});
-            vars[vars.length - 1].blocked = !settleDelayOver;
         }
         else {
             error(`Addon "${id}" doesn't support register`);
@@ -192,7 +190,7 @@ function reloadSetup() {
                 loadAddon(a[0], a[1].setup);
             }
         }
-        else {
+        else if (entry[0] !== "settleDelay") {
             warn(`Unknown setup option "${entry[0]}"`);
         }
     }
@@ -239,26 +237,25 @@ function reloadAll(initial = false) {
         v.destroy();
     }
 
-    if (setup.settleDelay > 0) {
-        settleDelayOver = false;
-        settleTimeout = setTimeout(_ => {
-            for (var v of vars) {
-                v.blocked = false;
-            }
-            settleDelayOver = true;
-            log("Settle time over");
-        }, setup.settleDelay || 10000);
-    }
-    else {
-        settleDelayOver = true;
-    }
-
     vars = [];
     varForwConvs = {};
     varBackConvs = {};
     setup = {};
     addSetupDir(setupPath);
     reloadSetup();
+
+    for (var v of vars) {
+        v.blocked = setup.settleDelay > 0;
+    }
+
+    if (setup.settleDelay > 0) {
+        settleTimeout = setTimeout(_ => {
+            for (var v of vars) {
+                v.blocked = false;
+            }
+            log("Settle time over");
+        }, setup.settleDelay);
+    }
 }
 
 function initialize() {
@@ -266,10 +263,10 @@ function initialize() {
         reloadAll(true);
         watch(setupPath, {
             persistent: false,
-        }, reloadAll);
+        }, _ => reloadAll());
         watch(addonsPath, {
             persistent: false,
-        }, reloadAll);
+        }, _ => reloadAll());
     }
     catch (e) {
         error(e);
