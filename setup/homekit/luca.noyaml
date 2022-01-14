@@ -8,6 +8,8 @@ addons:
             WindowCovering:
               TargetPosition:
                 id: l_rolli
+              CurrentPosition:
+                id: l_rolli_curr
         l_stecki:
           name: L Stecki
           services:

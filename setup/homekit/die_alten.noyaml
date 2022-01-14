@@ -8,6 +8,8 @@ addons:
             WindowCovering:
               TargetPosition:
                 id: e_rolli
+              CurrentPosition:
+                id: e_rolli_curr
         e_stecki:
           name: Schrankbeleuchtung
           services:

@@ -6,6 +6,13 @@ addons:
           device: 41
           class: SwitchMultilevel
           get: false
+      e_rolli_curr:
+        setup:
+          device: 2
+          class: SwitchMultilevel
+          set: false
+        forwardConverters:
+          - id: parseFloat
       e_stecki_switch:
         setup:
           device: 26
