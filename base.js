@@ -6,6 +6,10 @@ ClosedVar 1.0       VARIABLE        CHANNEL             EVENT
     - read()        returns value   -                   -
     - sub(cb)       on change       on available        on fired
 
+    - destroy()
+    - initialized
+    - blocked
+
 */
 
 const { Stream } = require("stream");
@@ -20,6 +24,7 @@ class ClosedBase {
             error("ClosedBase: Can't call constructor without id");
         }
         this.initialized = false;
+        this.blocked = false;
     }
 
     type() {
@@ -73,8 +78,10 @@ class ClosedVar extends ClosedBase {
                 if (changed || force) {
                     log(`ClosedVar: "${this.id}" ${this.value} -> ${val} (${typeof val})`);
                     this.value = val;
-                    for (var s of this.subs) {
-                        s(this.value);
+                    if (!this.blocked) {
+                        for (var s of this.subs) {
+                            s(this.value);
+                        }
                     }
                 }
             }
@@ -84,29 +91,36 @@ class ClosedVar extends ClosedBase {
                 log(`ClosedVar: "${this.id}" init -> ${val} (${typeof val})`);
                 this.value = val;
                 this.initialized = true;
-                for (var s of this.subs) {
-                    s(this.value);
+                if (!this.blocked) {
+                    for (var s of this.subs) {
+                        s(this.value);
+                    }
                 }
             }
         }
     }
 
     read() {
-        if (this.initialized) {
-            switch (typeof this.value) {
-                case "object":
-                    if ((this.value.constructor || {}).name === "array") {
-                        return [...this.value];
-                    }
-                    else {
-                        return JSON.parse(JSON.stringify(this.value));
-                    }
-                default:
-                    return this.value;
-            }
+        if (this.blocked) {
+            return undefined;
         }
         else {
-            warn(`ClosedVar: Can't read "${this.id}", not initialized`);
+            if (this.initialized) {
+                switch (typeof this.value) {
+                    case "object":
+                        if ((this.value.constructor || {}).name === "array") {
+                            return [...this.value];
+                        }
+                        else {
+                            return JSON.parse(JSON.stringify(this.value));
+                        }
+                    default:
+                        return this.value;
+                }
+            }
+            else {
+                warn(`ClosedVar: Can't read "${this.id}", not initialized`);
+            }
         }
     }
 
@@ -132,7 +146,9 @@ class ClosedChannel extends ClosedBase {
     }
 
     send(val) {
-        this.stream.push(val);
+        if (!this.blocked) {
+            this.stream.push(val);
+        }
     }
 
     read() {
@@ -159,9 +175,11 @@ class ClosedEvent extends ClosedBase {
     }
 
     send(val) {
-        log(`ClosedEvent: Triggered "${this.id}"`);
-        for (var s of this.subs) {
-            s();
+        if (!this.blocked) {
+            log(`ClosedEvent: Triggered "${this.id}"`);
+            for (var s of this.subs) {
+                s();
+            }
         }
     }
 

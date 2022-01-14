@@ -25,8 +25,11 @@ function convert(value, ctx) {
                     }
                 }
                 else {
-                    if (vr.initialized) {
-                        res += vr.read();
+                    if (vr.initialized && !vr.blocked) {
+                        const data = vr.read();
+                        if (data !== undefined) {
+                            res += vr.read();
+                        }
                     }
                     else {
                         if (e.or === undefined) {

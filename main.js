@@ -10,8 +10,6 @@ TODO:
     - what if sub 1 closes and sub 2 moves into its place?
         - random unique id
     - websocket api
-    - close:
-        - sse auth
     - rest:
         - retry on timeout (or reset item)
         - sse events
@@ -19,16 +17,23 @@ TODO:
 
 */
 
-const fs = require("fs");
-const { log, warn, error } = require("./out");
+const fs = require('fs');
+const { log, warn, error } = require('./out');
 const yaml = require('js-yaml');
+const watch = require('./recursive-watch');
 
+// does not send data the first 10 seconds
 const setupPath = "./setup/";
 const setupFile = /^\w+.yaml/;
 const addonsPath = "./addons/";
 const setupParser = yaml.load;
 
-var setup = { addons: {} };
+var settleDelayOver = false;
+var settleTimeout;
+var setup = {
+    addons: {},
+    settleDelay: 10000,
+};
 var loadedModules = [];
 var vars = [];
 var varForwConvs = {};
@@ -138,6 +143,7 @@ function loadAddon(id, addon_setup = {}, addon_register = [], mod) {
         };
         if (mod.register) {
             mod.register(r[0], r[1].setup || {});
+            vars[vars.length - 1].blocked = !settleDelayOver;
         }
         else {
             error(`Addon "${id}" doesn't support register`);
@@ -216,7 +222,12 @@ function addSetupDir(dir) {
     }
 }
 
-function reloadAll() {
+function reloadAll(initial = false) {
+    log(initial ? "Starting..." : "Restarting...");
+
+    if (settleTimeout) {
+        clearTimeout(settleTimeout);
+    }
     for (var a of loadedModules) {
         if (a.mod.stop) {
             a.mod.stop();
@@ -226,6 +237,20 @@ function reloadAll() {
     loadedModules = [];
     for (var v of vars) {
         v.destroy();
+    }
+
+    if (setup.settleDelay > 0) {
+        settleDelayOver = false;
+        settleTimeout = setTimeout(_ => {
+            for (var v of vars) {
+                v.blocked = false;
+            }
+            settleDelayOver = true;
+            log("Settle time over");
+        }, setup.settleDelay || 10000);
+    }
+    else {
+        settleDelayOver = true;
     }
 
     vars = [];
@@ -238,13 +263,12 @@ function reloadAll() {
 
 function initialize() {
     try {
-        log("Starting...");
-        reloadAll();
-        fs.watch(setupPath, {
+        reloadAll(true);
+        watch(setupPath, {
             persistent: false,
             recursive: true,
         }, reloadAll);
-        fs.watch(addonsPath, {
+        watch(addonsPath, {
             persistent: false,
             recursive: true,
         }, reloadAll);

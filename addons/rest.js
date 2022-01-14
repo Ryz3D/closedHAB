@@ -87,21 +87,24 @@ function register(id, setup = {}) {
     ctx.registerVar(vr);
     vars.push(vr);
     vr.sub(data => {
-        if (setupOption("verbose", setup)) {
-            log(`REST: Sending "${ctx.back(id, data)}" to ${setupOption("setMethod", setup)} "${setupOption("set", setup).replace(setupOption("placeholder", setup), ctx.back(id, data))}" for "${id}"`);
-        }
-        rest(id, setup, ctx.back(id, data), "set", "setMethod", res => {
+        if (data !== undefined) {
             if (setupOption("verbose", setup)) {
-                log(`REST: Got response for "${id}" set: "${res}"`);
+                log(`REST: Sending "${ctx.back(id, data)}" to ${setupOption("setMethod", setup)} "${setupOption("set", setup).replace(setupOption("placeholder", setup), ctx.back(id, data))}" for "${id}"`);
             }
-        });
-        if (intervals[id] !== undefined) {
-            clearInterval(intervals[id]);
+            rest(id, setup, ctx.back(id, data), "set", "setMethod", res => {
+                if (setupOption("verbose", setup)) {
+                    log(`REST: Got response for "${id}" set: "${res}"`);
+                }
+            });
+            if (intervals[id] !== undefined) {
+                clearInterval(intervals[id]);
+            }
+            intervals[id] = setInterval(...intervalFuncs[id]);
         }
-        intervals[id] = setInterval(...intervalFuncs[id]);
     });
     intervalFuncs[id] = [_ => {
-        const data = vr.initialized ? ctx.back(id, vr.read()) : "";
+        var data = vr.initialized ? vr.read() : undefined;
+        data = data ? ctx.back(id, data) : "";
         if (setupOption("verbose", setup)) {
             log(`REST: Getting "${id}" through ${setupOption("getMethod", setup)} "${setupOption("get", setup).replace(setupOption("placeholder", setup), data)}"`);
         }

@@ -8,6 +8,7 @@ const defaultSetup = {
     "pin": "031-45-154",
     "port": 51826,
     "publish": {},
+    "setInterval": 3000,
 };
 
 var ctx;
@@ -77,21 +78,30 @@ function run(c) {
                             chr.setValue(val);
                         });
                         intervals.push(setInterval(_ => {
-                            var val = vr.read();
-                            for (var c of backConvs) {
-                                const convCtx = { ...ctx, setup: c.setup || {} };
-                                val = require(`./${c.id}.js`).convert(val, convCtx);
+                            if (vr.initialized) {
+                                var val = vr.read();
+                                if (val !== undefined) {
+                                    for (var c of backConvs) {
+                                        const convCtx = { ...ctx, setup: c.setup || {} };
+                                        val = require(`./${c.id}.js`).convert(val, convCtx);
+                                    }
+                                    chr.setValue(val);
+                                }
                             }
-                            chr.setValue(val);
-                        }));
+                        }, setupOption("setInterval", v[1].setup)));
                         chr.on(hap.CharacteristicEventTypes.GET, callback => {
                             if (vr.initialized) {
                                 var val = vr.read();
-                                for (var c of backConvs) {
-                                    const convCtx = { ...ctx, setup: c.setup || {} };
-                                    val = require(`./${c.id}.js`).convert(val, convCtx);
+                                if (val === undefined) {
+                                    callback(undefined, chr.value);
                                 }
-                                callback(undefined, val);
+                                else {
+                                    for (var c of backConvs) {
+                                        const convCtx = { ...ctx, setup: c.setup || {} };
+                                        val = require(`./${c.id}.js`).convert(val, convCtx);
+                                    }
+                                    callback(undefined, val);
+                                }
                             }
                             else {
                                 callback(undefined, chr.value);

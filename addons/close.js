@@ -154,10 +154,15 @@ function run(c) {
             } else {
                 if (vr.initialized) {
                     var data = vr.read();
-                    for (var f of varBackConvs[vr.id] || []) {
-                        data = f(data);
+                    if (data === undefined) {
+                        res.json({ error: 1, message: "undefined" });
                     }
-                    res.json({ error: 0, data });
+                    else {
+                        for (var f of varBackConvs[vr.id] || []) {
+                            data = f(data);
+                        }
+                        res.json({ error: 0, data });
+                    }
                 }
                 else {
                     res.json({ error: 1, message: "uninitialized" });
@@ -205,10 +210,12 @@ function run(c) {
             for (var v of ctx.listVars()) {
                 const idBuf = v.id;
                 subClosers.push(v.sub(val => {
-                    for (var f of varBackConvs[idBuf] || []) {
-                        val = f(val);
+                    if (val !== undefined) {
+                        for (var f of varBackConvs[idBuf] || []) {
+                            val = f(val);
+                        }
+                        res.write(`event: ${idBuf}\ndata: ${val}\n\n`);
                     }
-                    res.write(`event: ${idBuf}\ndata: ${val}\n\n`);
                 }));
             }
             req.on("close", _ => {
