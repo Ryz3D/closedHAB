@@ -48,14 +48,14 @@ function run(c) {
         }
         if (passedCheck && !updating) {
             log("docker-cd: New Image, prepare for update.");
-            exec(`ssh ${ctx.setup.destination || "localhost"} ${ctx.setup.command || "./pull.sh"}`, (error, stdout, stderr) => {
-                if (error) {
-                    error(`docker-cd: exec: ${error}`);
+            exec(`ssh -o StrictHostKeyChecking=no ${ctx.setup.destination || "localhost"} ${ctx.setup.command || "./pull.sh"}`, (execerr, stdout, stderr) => {
+                if (execerr) {
+                    error(`docker-cd: ssh: ${execerr}`);
                 }
                 if (stderr) {
-                    error(`docker-cd: exec: ${stderr}`);
+                    error(`docker-cd: ssh: ${stderr}`);
                 }
-                log(`docker-cd: exec: ${stdout}`);
+                log(`docker-cd: ssh: ${stdout}`);
             });
             updating = true;
         }
