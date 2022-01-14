@@ -50,7 +50,6 @@ function options(req, res) {
 
 function run(c) {
     ctx = c;
-    startRetries = 0;
 
     const varForwConvs = {};
     const varBackConvs = {};
