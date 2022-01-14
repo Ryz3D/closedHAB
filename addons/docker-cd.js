@@ -1,12 +1,10 @@
 const express = require("express");
 const { log, warn, error } = require("../out");
-const process = require("process");
-const { pipeline } = require("stream");
 
 // executes update script over ssh when new docker image is pushed (https://docs.docker.com/docker-hub/webhooks/)
 // make sure that
 //  - the container is reachable on the webhook port (default 3001) by dockerhub (set up port forwarding)
-//  - the host has the deamon running on port 2375
+//  - the host has the deamon running on port 2375 (/lib/docker/)
 
 var ctx;
 var app, listener;
@@ -17,6 +15,61 @@ import("node-fetch")
     .then(mod => {
         fetch = mod.default;
     });
+
+function docker(method, cmd, body = undefined, statusStream = false) {
+    return new Promise(resolve => {
+        fetch(`http://${ctx.setup.host}:${ctx.setup.port || 2375}/${cmd}`, {
+            method,
+            headers: {
+                "Accept": "*/*",
+                "Content-Type": body ? "application/json" : undefined,
+            },
+            body,
+        })
+            .then(async res => {
+                const resText = await res.text();
+                if (res.status >= 200 && res.status <= 299) {
+                    log("docker-cd: Done!");
+                    if (statusStream) {
+                        var lastStatus;
+                        res.body.on("data", d => {
+                            const status = (JSON.parse(d.toString("utf-8")) || {}).status;
+                            if (status !== lastStatus) {
+                                log(`docker-cd: Status: ${status}`);
+                            }
+                        });
+                    }
+                    resolve(true);
+                }
+                else {
+                    error(`docker-cd: Docker API call failed: ${(JSON.parse(resText) || {}).message}`);
+                    resolve(false);
+                }
+            })
+            .catch(e => error(`docker-cd: Docker API call failed: ${e}`));
+    });
+}
+
+async function doUpdate() {
+    const image = `mircoheitmann/closedhab:${ctx.setup.tag || "latest"}`;
+    const container = ctx.setup.containerName || "closedhab";
+    var success;
+
+    log("docker-cd: Pulling new image...");
+    success = await docker("POST", `images/create?fromImage=${image}`, undefined, true);
+    if (!success) return;
+    log("docker-cd: Stopping and removing old container...");
+    success = await docker("DELETE", `containers/${container}?force=true`);
+    if (!success) return;
+    log("docker-cd: Creating container...");
+    success = await docker("POST", `containers/create?name=${container}`, JSON.stringify({
+        Image: image,
+        ...(ctx.setup.container || {}),
+    }));
+    if (!success) return;
+    log("docker-cd: Starting container...");
+    await docker("POST", `containers/${container}/start`);
+}
 
 function run(c) {
     ctx = c;
@@ -39,43 +92,18 @@ function run(c) {
             passedCheck = (req.body.push_data || {}).tag === ctx.setup.tag;
         }
         if (passedCheck && !updating) {
-            log("docker-cd: New Image, prepare for update.");
-            fetch(`http://${ctx.setup.host}:${ctx.setup.port || 2375}/images/create?fromImage=mircoheitmann/closedhab:${ctx.setup.tag || "latest"}`, {
-                method: "POST",
-                headers: {
-                    "Accept": "*/*",
-                },
-            })
-                .then(res => {
-                    if (res.status === 200) {
-                        res.body.on("end", _ => {
-                            log("docker-cd: Pull should be done now.");
-                        })
-                        res.body.on("error", e => {
-                            error(`docker-cd: Failed to read docker response: ${e}`);
-                        })
-                        pipeline(res.body, process.stdout, (err) => {
-                            if (err) {
-                                error(err);
-                            }
-                        });
-                    }
-                    else {
-                        error(`docker-cd: Docker API replied with ${res.status} ${res.statusText}`);
-                    }
-                })
-                .catch(e => error(`docker-cd: Docker API call failed${e}`));
+            doUpdate();
         }
         res.json({});
     });
 
     updating = false;
 
-    app.on("error", e => error(`docker-cd: Server failed: ${e}`));
+    app.on("error", e => error(`docker - cd: Server failed: ${e}`));
     const port = ctx.setup.port || 3001;
     listener = app.listen(port, _ => {
-        log(`docker-cd: Listening on port ${port}`);
-    }).on("error", e => error(`docker-cd: Can't start server: ${e}`));
+        log(`docker - cd: Listening on port ${port}`);
+    }).on("error", e => error(`docker - cd: Can't start server: ${e}`));
 }
 
 function stop() {
