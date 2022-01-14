@@ -28,16 +28,16 @@ const setupFile = /^\w+.yaml/;
 const addonsPath = "./addons/";
 const setupParser = yaml.load;
 
+var loadedModules = [];
 var settleDelayOver = false;
 var settleTimeout;
+var vars = [];
+var varForwConvs = {};
+var varBackConvs = {};
 var setup = {
     addons: {},
     settleDelay: 10000,
 };
-var loadedModules = [];
-var vars = [];
-var varForwConvs = {};
-var varBackConvs = {};
 
 function registerVar(vr) {
     log(`Registering var "${vr.id}"`);
