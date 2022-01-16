@@ -31,7 +31,7 @@ function run(c) {
 
     acs = new hap.Bridge(
         setupOption("name"),
-        hap.uuid.generate(setupOption("name")),
+        hap.uuid.generate(`chb.bdg.${setupOption("user")}`),
     );
 
     acs.getService(hap.Service.AccessoryInformation)
@@ -45,7 +45,7 @@ function run(c) {
         log(`Homekit: Adding Device "${a[1].name || acsId}"`);
         const bridgedAcs = new hap.Accessory(
             a[1].name || acsId,
-            hap.uuid.generate(acsId + "acs"),
+            hap.uuid.generate(`chb.acs.${acsId}`),
         );
 
         const info = bridgedAcs.getService(hap.Service.AccessoryInformation);
@@ -82,7 +82,6 @@ function run(c) {
             const service = new hap.Service[s[0]](
                 a[1].name || acsId,
             );
-            service.UUID = hap.uuid.generate(acsId);
 
             for (var v of Object.entries(s[1])) {
                 if (v[1].id === undefined) {
@@ -165,7 +164,7 @@ function run(c) {
             pincode: setupOption("pin"),
             port: setupOption("port"),
             category: hap.Categories.BRIDGE,
-            setupID: setupOption("setupID"),
+            setupID: setupOption("id"),
             addIdentifyingMaterial: true,
         });
     }
