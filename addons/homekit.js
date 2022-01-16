@@ -46,11 +46,36 @@ function run(c) {
             a[1].name || acsId,
             hap.uuid.generate(acsId + "acs"),
         );
-        acs.getService(hap.Service.AccessoryInformation)
-            .setCharacteristic(hap.Characteristic.Manufacturer, "closedHAB")
-            .setCharacteristic(hap.Characteristic.Model, "closedHAB Device")
+
+        const info = bridgedAcs.getService(hap.Service.AccessoryInformation);
+        info.setCharacteristic(hap.Characteristic.Manufacturer, "closedHAB")
+            .setCharacteristic(hap.Characteristic.Model, a[1].name || acsId)
             .setCharacteristic(hap.Characteristic.SerialNumber, setupOption("user"))
             .setCharacteristic(hap.Characteristic.FirmwareRevision, "1.0");
+
+        if (a[1].identify) {
+            log(`Homekit: Registering Identify ${a[1].identify.id} for ${a[1].name || acsId}`);
+            const identVar = ctx.findVar(a[1].identify.id);
+            if (identVar !== undefined) {
+                const offValue = a[1].identify.offValue === undefined ? 0 : a[1].identify.offValue;
+                const onValue = a[1].identify.onValue === undefined ? 1 : a[1].identify.onValue;
+                const delayFactor = a[1].identify.delayFactor === undefined ? 1 : a[1].identify.delayFactor;
+
+                info.getCharacteristic(hap.Characteristic.Identify).on(hap.CharacteristicEventTypes.SET, _ => {
+                    const pre = identVar.read();
+                    identVar.send(offValue);
+                    setTimeout(_ => {
+                        identVar.send(onValue);
+                    }, 1000 * delayFactor);
+                    setTimeout(_ => {
+                        identVar.send(offValue);
+                    }, 2000 * delayFactor);
+                    setTimeout(_ => {
+                        identVar.send(pre);
+                    }, 3000 * delayFactor);
+                });
+            }
+        }
 
         for (var s of Object.entries(a[1].services || {})) {
             const service = new hap.Service[s[0]](
@@ -64,9 +89,7 @@ function run(c) {
                 }
                 else {
                     const vr = ctx.findVar(v[1].id);
-                    if (vr === undefined) {
-                        error(`Homekit: Var "${v[1].id}" not found`);
-                    } else {
+                    if (vr !== undefined) {
                         const chr = service.getCharacteristic(hap.Characteristic[v[0]]);
                         const forwConvs = v[1].forwardConverters || [];
                         const backConvs = v[1].backwardConverters || [];
@@ -125,6 +148,12 @@ function run(c) {
         acs.addBridgedAccessory(bridgedAcs);
     }
 
+    acs.on("unpaired", _ => {
+        log(`Homekit: Unpaired`);
+    })
+    acs.on("paired", _ => {
+        log(`Homekit: Paired`);
+    })
     acs.on("advertised", _ => {
         log(`Homekit: Listening on port ${setupOption("port")} with pin ${setupOption("pin")}`);
     });
@@ -135,6 +164,8 @@ function run(c) {
             pincode: setupOption("pin"),
             port: setupOption("port"),
             category: hap.Categories.BRIDGE,
+            setupID: setupOption("setupID"),
+            addIdentifyingMaterial: true,
         });
     }
     catch (e) {
@@ -145,6 +176,8 @@ function run(c) {
 function stop() {
     return new Promise(resolve => {
         if (acs) {
+            acs.removeAllBridgedAccessories();
+            acs.removeAllListeners();
             acs.unpublish()
                 .then(_ => acs.destroy())
                 .then(_ => resolve());
