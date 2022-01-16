@@ -7,6 +7,7 @@ const defaultSetup = {
     "user": "CC:22:3D:E3:CE:31",
     "pin": "031-45-154",
     "port": 51826,
+    "setupID": 1732,
     "publish": {},
     "setInterval": 3000,
 };
@@ -80,8 +81,8 @@ function run(c) {
         for (var s of Object.entries(a[1].services || {})) {
             const service = new hap.Service[s[0]](
                 a[1].name || acsId,
-                hap.uuid.generate(acsId),
             );
+            service.UUID = hap.uuid.generate(acsId);
 
             for (var v of Object.entries(s[1])) {
                 if (v[1].id === undefined) {
