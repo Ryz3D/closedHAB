@@ -35,4 +35,4 @@ jobs:
           file: ./Dockerfile-armv6
           platforms: linux/arm/v6
           push: true
-          tags: mircoheitmann/closedhab:latest
+          tags: mircoheitmann/closedhab:latest-v6
